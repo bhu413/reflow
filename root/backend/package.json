@@ -1,0 +1,23 @@
+{
+  "name": "reflow",
+  "version": "1.0.0",
+  "description": "Node application that controls a reflow oven",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node backend/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bhu413/reflow.git"
+  },
+  "author": "Brandon Hu, Micah Rice, Mihretab Desta, Rohan Mathew",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/bhu413/reflow/issues"
+  },
+  "homepage": "https://github.com/bhu413/reflow#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
+}
