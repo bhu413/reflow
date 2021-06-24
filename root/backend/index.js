@@ -19,9 +19,9 @@ app.get("/api", (req, res) => {
 app.get("/lightstatus", (req, res) => {
 
   if (led.readSync() === 0) {
-    res.json({ status: "false" });
+    res.json({ checked: "false" });
   } else {
-    res.json({ status: "true" });
+    res.json({ checked: "true" });
   }
 
   //res.json({ status: false });
