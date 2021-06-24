@@ -2,7 +2,6 @@ import React, { Component } from "react";
 import {socket} from '../context/socket';
 import Switch from "react-switch";
 
-const initialState = {checked: false};
 /*
 function LedON() {
     fetch("/lighton");
@@ -67,9 +66,12 @@ class Profile extends Component {
         });
         
         fetch('/lightstatus')
-            .then(response => response.json())
             .then(result => {
-                this.setState(result);
+                if (result) {
+                    this.setState({checked: true});
+                } else {
+                    this.setState({checked: false});
+                }
         });
     }
   
