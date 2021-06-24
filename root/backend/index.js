@@ -28,14 +28,14 @@ app.get("/lightstatus", (req, res) => {
 });
 
 app.get("/lighton", (req, res) => {
-  //led.writeSync(1);
+  led.writeSync(1);
   io.to("allClients").emit("lighton");
   console.log("light on");
   res.send('turning light on');
 });
 
 app.get("/lightoff", (req, res) => {
-  //led.writeSync(0);
+  led.writeSync(0);
   io.to("allClients").emit("lightoff");
   console.log("light off");
   res.send('turning light off');
