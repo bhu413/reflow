@@ -66,8 +66,9 @@ class Profile extends Component {
         });
         
         fetch('/lightstatus')
+            .then(response => response.json())
             .then(result => {
-                if (result) {
+                if (result.result) {
                     this.setState({checked: true});
                 } else {
                     this.setState({checked: false});
