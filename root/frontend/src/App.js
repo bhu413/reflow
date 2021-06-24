@@ -1,12 +1,16 @@
-import React from "react";
-import logo from './logo.svg';
+
+import React, {useState, useEffect} from "react";
+import {SocketContext, socket} from './context/socket';
 import Profile from './components/Profile';
 import './App.css';
 
-function App() {
-  const [data, setData] = React.useState(null);
 
-  
+function App(props) {
+  //disconnect on page close
+  useEffect(() => {
+    return () => socket.disconnect();
+  }, []);
+
   return (
     <div className="App">
       <header className="App-header">
@@ -15,5 +19,5 @@ function App() {
     </div>
   );
 }
-
+//<h1>{props.isLocal.toString()}</h1>
 export {App};
