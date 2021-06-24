@@ -8,7 +8,7 @@ const io = require("socket.io")(server)
 const PORT = process.env.PORT || 3001;
 
 const gpio = require('onoff').Gpio;
-const led = new gpio(17, 'out');
+const led = new gpio(18, 'out');
 
 server.listen(PORT, () => console.log(`Listening on port ${PORT}`));
 
