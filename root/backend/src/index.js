@@ -7,8 +7,8 @@ const server = require("http").createServer(app);
 const io = require("socket.io")(server)
 const PORT = process.env.PORT || 3001;
 
-const gpio = require('onoff').Gpio;
-const led = new gpio(18, 'out');
+//const gpio = require('onoff').Gpio;
+//const led = new gpio(18, 'out');
 
 server.listen(PORT, () => console.log(`Listening on port ${PORT}`));
 
@@ -50,4 +50,8 @@ io.on("connection", (socket) => {
     console.log("Client disconnected");
   });
 
+});
+
+process.on('uncaughtException', (error) => {
+  //gpio clear or turn off
 });

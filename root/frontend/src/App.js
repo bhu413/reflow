@@ -1,6 +1,6 @@
 
 import React, {useState, useEffect} from "react";
-import {SocketContext, socket} from './context/socket';
+import { socket } from './context/socket';
 import Profile from './components/Profile';
 import './App.css';
 
