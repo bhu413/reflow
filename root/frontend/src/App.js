@@ -1,8 +1,15 @@
 
 import React, {useState, useEffect} from "react";
-import { socket } from './context/socket';
-import Profile from './components/Profile';
+import { socket } from './helpers/socket';
+import Main from './views/main';
 import './App.css';
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+  Link,
+  useParams
+} from "react-router-dom";
 
 
 function App(props) {
@@ -14,7 +21,7 @@ function App(props) {
   return (
     <div className="App">
       <header className="App-header">
-        <Profile />
+        <Main />
       </header>
     </div>
   );
