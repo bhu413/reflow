@@ -1,5 +1,5 @@
 import { React, Component } from 'react';
-import './Temperature.css';
+import './Components.css';
 
 class Temperature extends Component {
 
@@ -9,8 +9,9 @@ class Temperature extends Component {
   
     render() {
       return (
-          <div className="temperatureContainer">
+          <div className="component">
             <h1>Current Temperature</h1>
+            <h3>60 F</h3>
           </div>
       );
     }
