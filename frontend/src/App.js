@@ -1,5 +1,5 @@
 
-import React, {useState, useEffect} from "react";
+import React, { useEffect} from "react";
 import { socket } from './helpers/socket';
 import './App.css';
 import 'semantic-ui-css/semantic.min.css';
@@ -12,9 +12,6 @@ import {
   BrowserRouter as Router,
   Switch,
   Route,
-  Link,
-  useParams,
-  Redirect,
 } from "react-router-dom";
 import EditProfile from "./views/editProfile";
 

@@ -4,8 +4,28 @@ import Profile from '../components/Profile';
 import { Link } from "react-router-dom";
 import 'semantic-ui-css/semantic.min.css';
 
-class Running extends Component {
+var datapoints = [{
+  x: 0,
+  y: 30,
+}, {
+  x: 100,
+  y: 150,
+}, {
+  x: 180,
+  y: 150,
+}, {
+  x: 240,
+  y: 250,
+}, {
+  x: 280,
+  y: 250,
+}, {
+  x: 360,
+  y: 30,
+}];
 
+class Running extends Component {
+    
     componentDidMount() {
         
     }
@@ -13,7 +33,7 @@ class Running extends Component {
     render() {
       return (
           <>
-            <Profile draggable={false}/>
+            <Profile draggable={false} datapoints={datapoints}/>
             <Button as={Link} to="/" inverted color='red'>STOP</Button>
           </>
       );

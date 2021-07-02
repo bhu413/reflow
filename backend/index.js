@@ -12,6 +12,8 @@ const PORT = process.env.PORT || 3001;
 
 server.listen(PORT, () => console.log(`Listening on port ${PORT}`));
 
+app.use('/reflow_profiles', express.static('reflow_profiles'));
+
 app.get("/api", (req, res) => {
   res.json({ message: "Hello from server!" });
 });
