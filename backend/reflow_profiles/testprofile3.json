@@ -1,6 +1,5 @@
 {
-    "name": "Test Profile 3",
-    "dateCreated": "6-30-2021",
+    "dateCreated": 162500111000,
     "last_run": 1625001111110,
     "datapoints": [
         {"x": 0, "y": 20},

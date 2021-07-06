@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import { Scatter, defaults } from 'react-chartjs-2';
 //import { Button } from 'semantic-ui-react';
-//import {DraggableGraph} from './DraggableGraph';
+import {DraggableGraph} from './DraggableGraph';
 
 //ensures that touch devices can drag points on chart
 defaults.datasets.scatter.pointHitRadius = 40;

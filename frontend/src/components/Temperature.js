@@ -10,17 +10,20 @@ class Temperature extends Component {
     super();
     this.state = {temperature: 0};
     this.componentDidMount = this.componentDidMount.bind(this);
+    this.componentWillUnmount = this.componentWillUnmount.bind(this);
   }
 
   componentDidMount() {
-    /*
-    const context = this.context;
-    const socket = context.socket;
+    const socket = this.context;
     socket.on("temperature_update", (message) => {
       console.log('setting');
       this.setState({temperature: message.temperature});
     });
-    */
+  }
+
+  componentWillUnmount() {
+    const socket = this.context;
+    socket.off("temperature_update");
   }
 
   render() {

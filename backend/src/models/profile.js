@@ -26,6 +26,22 @@ module.exports.saveProfile = function(profile) {
     return validCode;
 }
 
+module.exports.getProfileList = function() {
+    return fs.readdirSync(profileDir);
+}
+
+module.exports.getProfile = function(profileName) {
+    return JSON.parse(fs.readFileSync(profileDir + '/' + profileName));
+}
+
+module.exports.updateLastRun = function(profileName) {
+    var profile = this.getProfile(profileName);
+    profile.last_run = Date.now();
+    profile = JSON.stringify(profile);
+    fs.writeFileSync(profileDir + '/' + filename + '.json', profile);
+}
+
+
 function deleteOldestProfile() {
     var fileList = getProfileList();
     var oldestProfileTime = Date.now();
@@ -48,6 +64,3 @@ function getNumProfiles() {
 }
 
 
-function getProfileList() {
-    return fs.readdirSync(profileDir);
-}

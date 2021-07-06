@@ -1,5 +1,6 @@
 // server/index.js
 
+const os = require('os');
 const express = require("express");
 const app = express();
 const server = require("http").createServer(app);
@@ -37,6 +38,8 @@ require("./src/services/test-routes")(app);
 server.listen(PORT, () => console.log(`Listening on port ${PORT}`));
 
 
-process.on('uncaughtException', (error) => {
-  //gpio clear and/or turn off
-});
+process.on('exit', (code) => {
+  clearInterval(interval);
+})
+
+console.log(os.networkInterfaces());

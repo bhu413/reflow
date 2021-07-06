@@ -1,4 +1,5 @@
 //const bodyParser = require("body-parser");
+const { request } = require('express');
 const profile = require('../models/profile');
 var oven;
 if (process.platform !== "linux") {
@@ -15,6 +16,10 @@ module.exports = function (app, express) {
         res.json({ message: "Hello from server!" });
     });
 
+    app.get("/reflow_profiles/list", (req, res) => {
+        res.json(profile.getProfileList());
+    });
+
     app.use('/reflow_profiles', express.static('reflow_profiles'));
 
     app.post("/reflow_profiles/save", (req, res) => {
@@ -29,8 +34,18 @@ module.exports = function (app, express) {
     });
 
     app.post("/run", (req, res) => {
-        var profile = request.body.profile_name;
-        oven.startProfile(profile);
+        var profileName = req.body.profile_name;
+        if (oven.getStatus() == "Running") {
+            if (req.body.override) {
+                oven.startProfile(profile.getProfile(profileName));
+                profile.updateLastRun(profileName);
+            } else {
+                res.json({message: "already running"});
+            }
+        } else {
+            oven.startProfile(profile.getProfile(profileName));
+            profile.updateLastRun(profileName);
+        }
     });
 
     app.post("/stop", (req, res) => {
