@@ -9,6 +9,7 @@ const MAX_PROFILES = 20;
 //2 == something wrong with file
 function validate(profile) {
     //check for invalid file characters
+    //must have at least 2 data points
     return 0;
 }
 

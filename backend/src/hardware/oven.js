@@ -25,7 +25,6 @@ module.exports = function(socketio) {
         var datapoints;
         updateStatus("Running");
         //status update for heating, reflow, cooling
-        fan.digitalWrite(1);
         datapoints = currentProfile.datapoints;
         var i = 0;
         let ctr = new Controller(0.25, 0.01, 0.00, 1); // k_p, k_i, k_d, dt
@@ -79,9 +78,17 @@ module.exports = function(socketio) {
         }, duration );
     }
 
+    function fanOn() {
+        fan.digitalWrite(1);
+    }
+
+    function fanOff() {
+        fan.digitalWrite(0);
+    }
+
     function updateStatus(newStatus) {
         status = newStatus;
-        //socket emit status_update
+        socketio.emit("status_update", {new_status: status})
     }
 
     //load a profile when initalizing 

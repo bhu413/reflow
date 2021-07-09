@@ -17,11 +17,12 @@ class Status extends Component {
     fetch('/status')
       .then(response => response.json())
       .then(result => {
+        console.log(result);
         this.setState({ status: result.status});
     });
     const socket = this.context;
     socket.on("status_update", (message) => {
-      this.setState({status: message.status});
+      this.setState({status: message.new_status});
     });
   }
 

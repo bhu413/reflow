@@ -1,18 +1,22 @@
 import React, { Component } from "react";
-import { Scatter, defaults } from 'react-chartjs-2';
+import { Scatter } from 'react-chartjs-2';
 //import * as zoom from 'chartjs-plugin-zoom'
 //import { Button } from 'semantic-ui-react';
 import {DraggableGraph} from './DraggableGraph';
 
-//ensures that touch devices can drag points on chart
-defaults.datasets.scatter.pointHitRadius = 40;
 
 class Profile extends Component {
   constructor(props) {
     super(props);
     this.componentDidMount = this.componentDidMount.bind(this);
-    //this.props.arrayUpdater.bind(this);
+
+    //hitradius over 25 ensures that touch devices can drag points
+    var hitRadius = 1;
+    if (this.props.draggable) {
+      hitRadius = 30;
+    }
     this.options = {
+      pointHitRadius: hitRadius,
       animation: {
         duration: 0,
       },
@@ -116,8 +120,8 @@ class Profile extends Component {
               backgroundColor: 'rgba(233, 236, 0, 0.2)',
               borderColor: 'rgba(233, 236, 0, 1)',
               borderWidth: 1,
-              pointRadius: 2,
-              hoverRadius: 5,
+              pointRadius: 1,
+              hoverRadius: 2,
               dragData: false,
               borderDash: [10,5],
             },
