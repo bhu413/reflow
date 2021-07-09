@@ -79,7 +79,7 @@ module.exports = function (app, express, socketio) {
     });
 
     app.post("/stop", (req, res) => {
-        var reason = request.body.reason;
+        var reason = req.body.reason;
         oven.stop();
     });
 }

@@ -21,7 +21,7 @@
     "express": "^4.17.1",
     "node-pid-controller": "^1.0.1",
     "nodemon": "^2.0.7",
-    "pigpio": "^3.3.1",
+    "onoff": "^6.0.3",
     "socket.io": "^4.1.2",
     "spi-device": "^3.1.2"
   }

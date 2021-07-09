@@ -3,6 +3,10 @@ module.exports = function(socketio, tempSensor) {
     const Controller = require('node-pid-controller');
     const profile = require('../models/profile');
 
+    //bypasses controller, just does on or off based on temp
+    var onOffMode = true;
+
+
     //pid variables
     var proportional = 0.25;
     var integral = 0.00;
@@ -61,10 +65,20 @@ module.exports = function(socketio, tempSensor) {
         let ctr = new Controller(proportional, integral, derivative, dt); // k_p, k_i, k_d, dt
         var i = 0;
         interval = setInterval(() => {
-            ctr.setTarget(getTemperatureAtPoint(i));
-            var correction = ctr.update(tempSensor.getTemp());
-            console.log(correction);
-            turnRelayOn(correction * 100);
+            temperatureSnapshot = tempSensor.getTemp();
+            temperatureTarget = getTemperatureAtPoint(i);
+            if (onOffMode) {
+                if (temperatureTarget < temperatureSnapshot) {
+                    console.log("relay on");
+                } else {
+                    console.log("relay off");
+                }
+            } else {
+                ctr.setTarget(temperatureTarget);
+                var correction = ctr.update(temperatureSnapshot);
+                console.log(correction);
+                turnRelayOn(correction * 100);
+            }
             if (i > datapoints[datapoints.length - 1].x + 30) {
                 module.stop();
             }

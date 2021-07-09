@@ -12,6 +12,7 @@ class Home extends Component {
     constructor() {
       super();
       this.runProfile = this.runProfile.bind(this);
+      this.stop = this.stop.bind(this);
       this.state = ({currentProfile: '', historicTemperature: [], percentDone: 0});
     }
 
@@ -41,6 +42,13 @@ class Home extends Component {
       });
     }
 
+    stop() {
+      axios.post('/stop', {reason: "test"})
+      .then(res => {
+        //console.log(res);
+      });
+    }
+
     render() {
       return (
         <>
@@ -50,6 +58,7 @@ class Home extends Component {
             <Button as={Link} to='/profileList' inverted color='blue'>Past Profiles</Button>
             <Button as={Link} to={{pathname: '/editProfile', state: {profile: this.state.currentProfile}}} inverted color='blue'>Edit Profile</Button>
             <Button onClick={this.runProfile} inverted color='green'>Start</Button>
+            <Button onClick={this.stop} inverted color='red'>Stop</Button>
         </>
       );
     }

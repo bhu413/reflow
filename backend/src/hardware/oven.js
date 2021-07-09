@@ -2,9 +2,12 @@ module.exports = function(socketio, tempSensor) {
     
     const Controller = require('node-pid-controller');
     const profile = require('../models/profile');
-    const Gpio = require('pigpio').Gpio;
-    const relay = new Gpio(27, {mode: Gpio.OUTPUT});
-    const fan = new Gpio(22, {mode: Gpio.OUTPUT});
+    const Gpio = require('onoff').Gpio;
+    const relay = new Gpio(27, 'out');
+    const fan = new Gpio(22, 'out');
+
+    //bypasses controller, just does on or off based on temp
+    var onOffMode = true;
 
     //pid variables
     var proportional = 0.25;
@@ -64,14 +67,24 @@ module.exports = function(socketio, tempSensor) {
         let ctr = new Controller(proportional, integral, derivative, dt); // k_p, k_i, k_d, dt
         var i = 0;
         interval = setInterval(() => {
-            ctr.setTarget(getTemperatureAtPoint(i));
-            var correction = ctr.update(tempSensor.getTemp());
-            console.log(correction);
-            turnRelayOn(correction * 100);
+            temperatureSnapshot = tempSensor.getTemp();
+            temperatureTarget = getTemperatureAtPoint(i);
+            if (onOffMode) {
+                if (temperatureTarget < temperatureSnapshot) {
+                    relay.writeSync(1);
+                } else {
+                    relay.writeSync(0);
+                }
+            } else {
+                ctr.setTarget(temperatureTarget);
+                var correction = ctr.update(temperatureSnapshot);
+                console.log(correction);
+                turnRelayOn(correction * 100);
+            }
             if (i > datapoints[datapoints.length - 1].x + 30) {
                 module.stop();
             }
-            tempHistory.push({x: i, y: tempSensor.getTemp()});
+            tempHistory.push({x: i, y: temperatureSnapshot});
             socketio.emit("historic_temperature_update", {historic_temperature: tempHistory, percent: 0});
             i++;
         }, 1000);
@@ -82,7 +95,7 @@ module.exports = function(socketio, tempSensor) {
     
     module.stop = function() {
         clearInterval(interval);
-        relay.digitalWrite(0);
+        relay.writeSync(0);
         fanOff();
         updateStatus("Ready");
     }
@@ -103,21 +116,21 @@ module.exports = function(socketio, tempSensor) {
     //if less than 50ms, then don't turn on at all
     function turnRelayOn(duration) {
         if (duration >= 1000) {
-            relay.digitalWrite(1);
+            relay.writeSync(1);
         } else if (duration > 50) {
-            relay.digitalWrite(1);
+            relay.writeSync(1);
             setTimeout(function() {
-                relay.digitalWrite(0);
+                relay.writeSync(0);
             }, duration );
         }
     }
 
     function fanOn() {
-        fan.digitalWrite(1);
+        fan.writeSync(1);
     }
 
     function fanOff() {
-        fan.digitalWrite(0);
+        fan.writeSync(0);
     }
     
     function updateStatus(newStatus) {
