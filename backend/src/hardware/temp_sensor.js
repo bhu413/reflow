@@ -1,4 +1,4 @@
-module.exports = function(socketio) {
+module.exports = function (socketio) {
     const spi = require('spi-device');
 
     //list of things to export
@@ -14,61 +14,63 @@ module.exports = function(socketio) {
     }];
 
     function readSpi(chipSelect) {
-        const tempSensor = spi.open(0, chipSelect, err => {
-        if (err) throw err;
-    
-            tempSensor.transfer(message, (err, message) => {
-                if (err) throw err;
-    
-                //get decimal int by reading buffer
-                var decimal = message[0].receiveBuffer.readInt16BE();
-    
-                //turn decimal to binary string
-                var binaryString = decimal.toString(2);
-    
-                //check if third to last bit is 1
-                if (binaryString.charAt(binaryString.length - 3) == '1') {
-                    console.log("thermocouple disconnected!!!");
-                    return NaN;
-                } else {
-                    //get rid of last three bits
-                    binaryString = binaryString.substring(0, binaryString.length - 3);
-    
-                    //convert back to decimal
-                    var tempReading = parseInt(binaryString, 2);
-                    return (tempReading * 0.25);
-                }
-            });
-        });
+        const tempSensor = spi.openSync(0, chipSelect);
+        tempSensor.transferSync(message);
+        tempSensor.closeSync();
+
+        //get decimal int by reading buffer
+        var decimal = message[0].receiveBuffer.readInt16BE();
+
+        if (decimal == 0) {
+            return -1;
+        }
+        
+        //turn decimal to binary string
+        var binaryString = decimal.toString(2);
+
+        //check if third to last bit is 1
+        if (binaryString.charAt(binaryString.length - 3) == '1') {
+            console.log("thermocouple disconnected!!!");
+            return -1;
+        } else {
+            //get rid of last three bits
+            binaryString = binaryString.substring(0, binaryString.length - 3);
+
+            //convert back to decimal
+            var tempReading = parseInt(binaryString, 2);
+            return (tempReading * 0.25);
+        }
     }
 
     function updateTemp() {
         var celcius1 = readSpi(0);
         var celcius2 = readSpi(1);
-    
-        if (celcius1 == NaN && celcius2 == NaN) {
-            return NaN;
-        } else if (celcius1 == NaN) {
-            return celcius2;
-        } else if (celcius2 == NaN) {
-            return celcius1;
+
+        if (celcius1 == -1 && celcius2 == -1) {
+            currentTemp = -1;
+        } else if (celcius1 == -1) {
+            currentTemp = celcius2;
+        } else if (celcius2 == -1) {
+            currentTemp = celcius1;
+        } else {
+            currentTemp = (celcius1 + celcius2) / 2;
         }
-    
-        currentTemp = (celcius1 + celcius2) / 2;
-        socketio.emit("temperature_update", {temperature: currentTemp});
+        socketio.emit("temperature_update", { temperature: currentTemp });
     }
-    
+
     module.getTemp = function () {
         return currentTemp;
     }
 
     //update temp every 1 second
     const interval = setInterval(updateTemp, 1000);
-    
+
     process.on('exit', (code) => {
         clearInterval(interval);
     });
-    
+
+    console.log("temp sensors initialized");
+
     return module;
 }
 

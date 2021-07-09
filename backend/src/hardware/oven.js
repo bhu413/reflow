@@ -131,7 +131,14 @@ module.exports = function(socketio, tempSensor) {
     //if anything goes wrong, stop everything in the oven
     process.on('uncaughtException', (error) => {
         console.log(error);
+        process.exit(1);
+    });
+
+    process.on('exit', (code) => {
         module.stop();
+    });
+
+    process.on('SIGINT', () => {
         process.exit(1);
     });
 

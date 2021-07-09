@@ -18,6 +18,11 @@ module.exports = function (app, express, socketio) {
     app.use(express.json());
 
     //setting all of our endpoints
+
+    // Have Node serve the files for our built React app
+    console.log(__dirname);
+    app.use("/", express.static("../frontend/build"));
+
     app.get("/test", (req, res) => {
         res.json({ message: "Hello from server!" });
     });
