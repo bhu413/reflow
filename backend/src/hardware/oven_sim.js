@@ -68,7 +68,7 @@ module.exports = function(socketio, tempSensor) {
             temperatureSnapshot = tempSensor.getTemp();
             temperatureTarget = getTemperatureAtPoint(i);
             if (onOffMode) {
-                if (temperatureTarget < temperatureSnapshot) {
+                if (temperatureTarget > temperatureSnapshot) {
                     console.log("relay on");
                 } else {
                     console.log("relay off");
