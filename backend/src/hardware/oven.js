@@ -70,7 +70,7 @@ module.exports = function(socketio, tempSensor) {
             temperatureSnapshot = tempSensor.getTemp();
             temperatureTarget = getTemperatureAtPoint(i);
             if (onOffMode) {
-                if (temperatureTarget < temperatureSnapshot) {
+                if (temperatureTarget > temperatureSnapshot) {
                     relay.writeSync(1);
                 } else {
                     relay.writeSync(0);
