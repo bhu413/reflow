@@ -9,6 +9,9 @@ module.exports = function(socketio, tempSensor) {
     //bypasses controller, just does on or off based on temp
     var onOffMode = true;
 
+    //how many seconds to look ahead when figuring out target temp
+    var lookAhead = 0;
+
     //pid variables
     var proportional = 0.25;
     var integral = 0.00;
@@ -68,7 +71,7 @@ module.exports = function(socketio, tempSensor) {
         var i = 0;
         interval = setInterval(() => {
             temperatureSnapshot = tempSensor.getTemp();
-            temperatureTarget = getTemperatureAtPoint(i);
+            temperatureTarget = getTemperatureAtPoint(i + lookAhead);
             if (onOffMode) {
                 if (temperatureTarget > temperatureSnapshot) {
                     relay.writeSync(1);
