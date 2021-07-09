@@ -14,9 +14,13 @@ class Temperature extends Component {
   }
 
   componentDidMount() {
+    fetch('/temperature')
+      .then(response => response.json())
+      .then(result => {
+        this.setState({ temperature: result.temperature});
+    });
     const socket = this.context;
     socket.on("temperature_update", (message) => {
-      console.log('setting');
       this.setState({temperature: message.temperature});
     });
   }
@@ -29,7 +33,7 @@ class Temperature extends Component {
   render() {
     return (
       <div className="component">
-      <h1>Current Temperature</h1>
+      <h1>Temperature</h1>
       <h3>{this.state.temperature} C</h3>
       </div>
     );

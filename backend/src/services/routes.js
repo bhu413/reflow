@@ -1,25 +1,50 @@
-//const bodyParser = require("body-parser");
-const { request } = require('express');
-const profile = require('../models/profile');
-var oven;
-if (process.platform !== "linux") {
-    oven = require('../hardware/oven_sim');
-  } else {
-    oven = require('../hardware/oven');
-  }
 
-module.exports = function (app, express) {
+
+module.exports = function (app, express, socketio) {
+    //const bodyParser = require("body-parser");
+    const { request } = require('express');
+    const profile = require('../models/profile');
+    var oven;
+    if (process.platform !== "linux") {
+        tempSensor = require('../hardware/temp_sensor_sim')(socketio);
+        oven = require('../hardware/oven_sim')(socketio, tempSensor);
+    } else {
+        tempSensor = require('../hardware/temp_sensor')(socketio);
+        oven = require('../hardware/oven')(socketio, tempSensor);
+    }
+
     //Here we are configuring express to use body-parser as middle-ware.
     app.use(express.urlencoded({ extended: false }));
     app.use(express.json());
-    app.get("/api", (req, res) => {
+
+    //setting all of our endpoints
+    app.get("/test", (req, res) => {
         res.json({ message: "Hello from server!" });
+    });
+
+    app.get("/temperature", (req, res) => {
+        res.json({temperature: tempSensor.getTemp()});
+    });
+
+    app.get("/status", (req, res) => {
+        res.json({status: oven.getStatus()});
+    });
+
+    app.get("/current_profile", (req, res) => {
+        res.json({current_profile: oven.getCurrentProfile()});
+    });
+
+    app.post("/reflow_profiles/load", (req, res) => {
+        oven.loadProfile(req.body.profile_name);
+        res.json({message: "loading profile"});
+        profile.updateLastRun(req.body.profile_name);
     });
 
     app.get("/reflow_profiles/list", (req, res) => {
         res.json(profile.getProfileList());
     });
 
+    //statically serve files from folder
     app.use('/reflow_profiles', express.static('reflow_profiles'));
 
     app.post("/reflow_profiles/save", (req, res) => {
@@ -38,13 +63,13 @@ module.exports = function (app, express) {
         if (oven.getStatus() == "Running") {
             if (req.body.override) {
                 oven.startProfile(profile.getProfile(profileName));
-                profile.updateLastRun(profileName);
+                
             } else {
                 res.json({message: "already running"});
             }
         } else {
-            oven.startProfile(profile.getProfile(profileName));
-            profile.updateLastRun(profileName);
+            oven.loadProfile(profileName);
+            oven.startProfile();
         }
     });
 

@@ -1,93 +1,96 @@
 import React, { Component } from "react";
 import { Scatter, defaults } from 'react-chartjs-2';
+//import * as zoom from 'chartjs-plugin-zoom'
 //import { Button } from 'semantic-ui-react';
 import {DraggableGraph} from './DraggableGraph';
 
 //ensures that touch devices can drag points on chart
 defaults.datasets.scatter.pointHitRadius = 40;
 
-//keeping track of changes to datapoints
-var newDatapoints = [];
-
 class Profile extends Component {
-
   constructor(props) {
     super(props);
-    this.saveProfile = this.saveProfile.bind(this);
     this.componentDidMount = this.componentDidMount.bind(this);
-    //this.state = ({ datapoints: [] });
+    //this.props.arrayUpdater.bind(this);
+    this.options = {
+      animation: {
+        duration: 0,
+      },
+      scales: {
+        y: {
+          min: 0,
+          max: 300,
+          stepSize: 1,
+          title: {
+            text: 'Temperature',
+            display: true,
+            color: 'rgba(41, 216, 255, 0.7)',
+            font: {
+              size: 20,
+            },
+          },
+        },
+        x: {
+          min: 0,
+          max: 400,
+          stepSize: 1,
+          title: {
+            text: 'Time (Seconds)',
+            display: true,
+            color: 'rgba(41, 216, 255, 0.7)',
+            font: {
+              size: 20,
+            },
+          },
+        },
+      },
+    
+      plugins: {
+        dragData: {
+          round: 0,
+          dragX: true,
+          onDrag: function (e, datasetIndex, index, value) {
+            //console.log(e, datasetIndex, index, value);
+          },
+          onDragStart: function (e, element) {
+            //console.log(e, element);
+          },
+          onDragEnd: function (e, datasetIndex, index, value) {
+            //update array with new datapoint
+            props.arrayUpdater[index] = value;
+            
+          },
+        },
+        zoom: {
+          wheel: {
+            enabled: true,
+          },
+          pinch: {
+            enabled: true
+          },
+          mode: 'xy',
+        },
+        tooltip: {
+          xAlign: 'right',
+          yAlign: 'bottom',
+          displayColors: false,
+          caretPadding: 30,
+          caretSize: 10,
+          bodySpacing: 20,
+        },
+        legend: {
+          display: false,
+        },
+        title: {
+          display: true,
+          text: this.props.profile.name
+        },
+      },
+    };
   }
-
-  options = {
-    animation: {
-      duration: 0,
-    },
-  
-    scales: {
-      y: {
-        min: 0,
-        max: 300,
-        stepSize: 1,
-        title: {
-          text: 'Temperature',
-          display: true,
-          color: 'rgba(41, 216, 255, 0.7)',
-          font: {
-            size: 20,
-          },
-        },
-      },
-      x: {
-        min: 0,
-        max: 400,
-        stepSize: 1,
-        title: {
-          text: 'Time (Seconds)',
-          display: true,
-          color: 'rgba(41, 216, 255, 0.7)',
-          font: {
-            size: 20,
-          },
-        },
-      },
-    },
-  
-    plugins: {
-      dragData: {
-        round: 0,
-        dragX: true,
-        onDrag: function (e, datasetIndex, index, value) {
-          //console.log(e, datasetIndex, index, value);
-        },
-        onDragStart: function (e, element) {
-          //console.log(e, element);
-        },
-        onDragEnd: function (e, datasetIndex, index, value) {
-          //update array with new datapoint
-          newDatapoints[index] = value;
-        },
-      },
-      tooltip: {
-        xAlign: 'right',
-        yAlign: 'bottom',
-        displayColors: false,
-        caretPadding: 30,
-        caretSize: 10,
-        bodySpacing: 20,
-      },
-      legend: {
-        display: false,
-      },
-    },
-  };
-  
 
   componentDidMount() {
     
-  }
-
-  saveProfile() {
-    console.log(newDatapoints);
   }
 
   render() {
@@ -97,7 +100,7 @@ class Profile extends Component {
           datasets: [
             {
               label: 'Profile',
-              data: this.props.datapoints,
+              data: this.props.profile.datapoints,
               showLine: true,
               backgroundColor: 'rgba(42, 216, 255, 0.2)',
               borderColor: 'rgba(42, 216, 255, 1)',
@@ -106,11 +109,23 @@ class Profile extends Component {
               hoverRadius: 20,
               dragData: this.props.draggable,
             },
+            {
+              label: 'Historic Temerature',
+              data: this.props.historicTemps,
+              showLine: true,
+              backgroundColor: 'rgba(233, 236, 0, 0.2)',
+              borderColor: 'rgba(233, 236, 0, 1)',
+              borderWidth: 1,
+              pointRadius: 2,
+              hoverRadius: 5,
+              dragData: false,
+              borderDash: [10,5],
+            },
           ],
         }} options={this.options} />  
       </>
     );
   }
 }
-
+//this.props.historicTemps
 export default Profile;

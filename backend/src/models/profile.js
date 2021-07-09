@@ -1,6 +1,6 @@
 const fs = require('fs');
 const profileDir = './reflow_profiles';
-const MAX_PROFILES = 3;
+const MAX_PROFILES = 20;
 
 
 //NEED TO IMPLEMENT
@@ -8,6 +8,7 @@ const MAX_PROFILES = 3;
 //1 == something wrong with data
 //2 == something wrong with file
 function validate(profile) {
+    //check for invalid file characters
     return 0;
 }
 
@@ -31,19 +32,19 @@ module.exports.getProfileList = function() {
 }
 
 module.exports.getProfile = function(profileName) {
-    return JSON.parse(fs.readFileSync(profileDir + '/' + profileName));
+    return JSON.parse(fs.readFileSync(profileDir + '/' + profileName + '.json'));
 }
 
 module.exports.updateLastRun = function(profileName) {
-    var profile = this.getProfile(profileName);
+    var profile = module.exports.getProfile(profileName);
     profile.last_run = Date.now();
     profile = JSON.stringify(profile);
-    fs.writeFileSync(profileDir + '/' + filename + '.json', profile);
+    fs.writeFileSync(profileDir + '/' + profileName + '.json', profile);
 }
 
 
 function deleteOldestProfile() {
-    var fileList = getProfileList();
+    var fileList = module.exports.getProfileList();
     var oldestProfileTime = Date.now();
     var oldestProfile = null;
     for (const file of fileList) {

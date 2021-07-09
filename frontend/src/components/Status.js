@@ -14,9 +14,13 @@ class Status extends Component {
   }
 
   componentDidMount() {
+    fetch('/status')
+      .then(response => response.json())
+      .then(result => {
+        this.setState({ status: result.status});
+    });
     const socket = this.context;
     socket.on("status_update", (message) => {
-      console.log('setting');
       this.setState({status: message.status});
     });
   }
