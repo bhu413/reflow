@@ -68,18 +68,20 @@ module.exports = function (app, express, socketio) {
         if (oven.getStatus() == "Running") {
             if (req.body.override) {
                 oven.startProfile(profile.getProfile(profileName));
-                
+                res.json({ message: "running profile" });
             } else {
                 res.json({message: "already running"});
             }
         } else {
             oven.loadProfile(profileName);
             oven.startProfile();
+            res.json({ message: "running profile" });
         }
     });
 
     app.post("/stop", (req, res) => {
         var reason = req.body.reason;
         oven.stop();
+        res.json({ message: "stopped" });
     });
 }
