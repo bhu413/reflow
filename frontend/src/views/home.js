@@ -1,64 +1,69 @@
 import { React, Component } from 'react';
-import Temperature from '../components/Temperature';
+
 import Profile from '../components/Profile';
-import Status from '../components/Status';
-import { Button } from 'semantic-ui-react';
-import 'semantic-ui-css/semantic.min.css';
+import EditIcon from '@material-ui/icons/Edit';
+import { Button } from '@material-ui/core';
 import { Link } from "react-router-dom";
 import { socket } from '../helpers/socket';
-import axios from'axios';
+import axios from 'axios';
+import PlayArrowIcon from '@material-ui/icons/PlayArrow';
+import StopIcon from '@material-ui/icons/Stop';
+import StatusBar from '../components/StatusBar';
 
 class Home extends Component {
     constructor() {
       super();
       this.runProfile = this.runProfile.bind(this);
       this.stop = this.stop.bind(this);
-      this.state = ({currentProfile: '', historicTemperature: [], percentDone: 0});
+      this.state = ({ currentProfile: '', historicTemperature: [], percentDone: 0 });
+      
     }
 
     componentDidMount() {
-      fetch('/current_profile')
+      fetch('/api/current_profile')
       .then(response => response.json())
       .then(result => {
         this.setState({ currentProfile: result.current_profile});
       });
-      socket.on("new_profile", (message) => {
-        this.setState({currentProfile: message.current_profile});
-      });
-      socket.on("historic_temperature_update", (message) => {
-        this.setState({historicTemperature: message.historic_temperature, percentDone: message.percent});
+      socket.on("status_update", (message) => {
+        this.setState({
+          currentProfile: message.current_profile,
+          historicTemperature: message.historic_temperature
+        });
       });
     }
 
     componentWillUnmount() {
-      socket.off("new_profile");
-      socket.off("historic_temperature_update");
+      socket.off("status_update");
     }
 
     runProfile() {
-      axios.post('/run', {profile_name: this.state.currentProfile.name})
+      axios.post('/api/run', {profile_name: this.state.currentProfile.name})
       .then(res => {
-        console.log(res);
       });
     }
 
     stop() {
-      axios.post('/stop', {reason: "test"})
+      axios.post('/api/stop', {reason: "test"})
       .then(res => {
         //console.log(res);
       });
     }
 
-    render() {
-      return (
-        <>
-            <Temperature />
-            <Status />
-            <Profile draggable={false} profile={this.state.currentProfile} historicTemps={this.state.historicTemperature} />
-            <Button as={Link} to='/profileList' inverted color='blue'>Past Profiles</Button>
-            <Button as={Link} to={{pathname: '/editProfile', state: {profile: this.state.currentProfile}}} inverted color='blue'>Edit Profile</Button>
-            <Button onClick={this.runProfile} inverted color='green'>Start</Button>
-            <Button onClick={this.stop} inverted color='red'>Stop</Button>
+  render() {
+    return (
+      <>
+          
+        <StatusBar />
+        <div style={{  paddingTop: "20px", paddingLeft: "20px", width: '85%', display: "flex", justifyContent: "center"}}>
+          <Profile draggable={false} profile={this.state.currentProfile} historicTemps={this.state.historicTemperature} />
+        </div>
+          
+          
+        <Button component={Link} to={{ pathname: '/editProfile', state: { profile: this.state.currentProfile } }} startIcon={<EditIcon />} variant="contained" color="primary" >Edit Current Profile</Button>
+          <Button onClick={this.stop} startIcon={<StopIcon />} variant="contained" color="primary">Stop</Button>
+          <Button onClick={this.runProfile} startIcon={<PlayArrowIcon />} variant="contained" color="primary">Start</Button>
+          
         </>
       );
     }

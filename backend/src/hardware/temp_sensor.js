@@ -55,7 +55,6 @@ module.exports = function (socketio) {
         } else {
             currentTemp = (celcius1 + celcius2) / 2;
         }
-        socketio.emit("temperature_update", { temperature: currentTemp });
     }
 
     module.getTemp = function () {

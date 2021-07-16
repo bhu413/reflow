@@ -20,57 +20,60 @@ module.exports = function (app, express, socketio) {
     //setting all of our endpoints
 
     // Have Node serve the files for our built React app
-    console.log(__dirname);
     app.use("/", express.static("../frontend/build"));
 
-    app.get("/test", (req, res) => {
+    app.get("/api/test", (req, res) => {
         res.json({ message: "Hello from server!" });
     });
 
-    app.get("/temperature", (req, res) => {
+    app.get("/api/temperature", (req, res) => {
         res.json({temperature: tempSensor.getTemp()});
     });
 
-    app.get("/status", (req, res) => {
+    app.get("/api/status", (req, res) => {
         res.json({status: oven.getStatus()});
     });
 
-    app.get("/current_profile", (req, res) => {
+    app.get("/api/current_profile", (req, res) => {
         res.json({current_profile: oven.getCurrentProfile()});
     });
 
-    app.post("/reflow_profiles/load", (req, res) => {
-        oven.loadProfile(req.body.profile_name);
+    app.post("/api/reflow_profiles/load", (req, res) => {
+        oven.loadProfile(req.body.profile_name, true);
         res.json({message: "loading profile"});
         profile.updateLastRun(req.body.profile_name);
     });
 
-    app.get("/reflow_profiles/list", (req, res) => {
+    app.get("/api/reflow_profiles/list", (req, res) => {
         res.json(profile.getProfileList());
     });
 
-    //statically serve files from folder
-    app.use('/reflow_profiles', express.static('reflow_profiles'));
+    app.get("/api/reflow_profiles/all", (req, res) => {
+        res.json(profile.getAllProfiles());
+    });
 
-    app.post("/reflow_profiles/save", (req, res) => {
+    //statically serve files from folder
+    app.use('/api/reflow_profiles', express.static('reflow_profiles'));
+
+    app.post("/api/reflow_profiles/save", (req, res) => {
         var validCode = profile.saveProfile(req.body);
         if (validCode == 0) {
-            res.json({ message: "Saved successfully" });
+            res.status(201).json({ message: "Saved successfully" });
         } else if (validCode == 1) {
-            res.json({ message: "Error: bad data" });
+            res.status(406).json({ message: "Error: bad data" });
         } else if (validCode == 2) {
-            res.json({ message: "Error: bad file" });
+            res.status(406).json({ message: "Error: bad file" });
         }
     });
 
-    app.post("/run", (req, res) => {
+    app.post("/api/run", (req, res) => {
         var profileName = req.body.profile_name;
         if (oven.getStatus() == "Running") {
             if (req.body.override) {
                 oven.startProfile(profile.getProfile(profileName));
                 res.json({ message: "running profile" });
             } else {
-                res.json({message: "already running"});
+                res.status(409).json({message: "already running"});
             }
         } else {
             oven.loadProfile(profileName);
@@ -79,9 +82,17 @@ module.exports = function (app, express, socketio) {
         }
     });
 
-    app.post("/stop", (req, res) => {
+    app.post("/api/stop", (req, res) => {
         var reason = req.body.reason;
         oven.stop();
         res.json({ message: "stopped" });
+    });
+
+    var interval = setInterval(() => {
+        socketio.emit("status_update", oven.getStatus());
+    }, 1000);
+
+    process.on('exit', (code) => {
+        clearInterval(interval);
     });
 }

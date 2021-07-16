@@ -20,9 +20,11 @@ module.exports = function(socketio, tempSensor) {
 
     //list of things to export
     var module = {};
-    var status = "Ready";
+    var currentAction = "Ready";
     var interval;
     var currentProfile;
+    var tempHistory = [];
+    var percentDone = 0;
 
     //just a linear interpolation function
     function getTemperatureAtPoint(x) {
@@ -56,14 +58,15 @@ module.exports = function(socketio, tempSensor) {
     }
 
     module.startProfile = function() {
-        if (currentProfile == null) {
+        if (currentProfile == null || currentAction != "Ready") {
             return -1;
         }
-        var tempHistory = [];
-        var datapoints = currentProfile.datapoints;
         
+        var datapoints = currentProfile.datapoints;
+        tempHistory = [];
+
         //need to implement status update for heating, reflow, cooling
-        updateStatus("Running");
+        currentAction = "Running";
     
         fanOn();
 
@@ -71,6 +74,10 @@ module.exports = function(socketio, tempSensor) {
         var i = 0;
         interval = setInterval(() => {
             temperatureSnapshot = tempSensor.getTemp();
+            if (temperatureSnapshot < 0) {
+                module.stop();
+                return -1;
+            }
             temperatureTarget = getTemperatureAtPoint(i + lookAhead);
             if (onOffMode) {
                 if (temperatureTarget > temperatureSnapshot) {
@@ -88,7 +95,7 @@ module.exports = function(socketio, tempSensor) {
                 module.stop();
             }
             tempHistory.push({x: i, y: temperatureSnapshot});
-            socketio.emit("historic_temperature_update", {historic_temperature: tempHistory, percent: 0});
+            Math.floor((i / datapoints[datapoints.length - 1].x) * 100)
             i++;
         }, 1000);
         //io emit "user can open door"
@@ -100,25 +107,39 @@ module.exports = function(socketio, tempSensor) {
         clearInterval(interval);
         relay.writeSync(0);
         fanOff();
-        updateStatus("Ready");
+        currentAction = "Ready";
     }
     
     module.getStatus = function() {
-        return status;
+        return {
+            status: currentAction,
+            temperature: tempSensor.getTemp(),
+            current_profile: currentProfile,
+            historic_temperature: tempHistory,
+            percentage: percentDone
+        };
     }
     
     module.getCurrentProfile = function() {
         return currentProfile;
     }
     
-    module.loadProfile = function(profileName) {
-        currentProfile = profile.getProfile(profileName);
-        socketio.emit("new_profile", {current_profile: currentProfile});
+    module.loadProfile = function (profileName, force) {
+        if (currentAction == "Running") {
+            if (force) {
+                module.stop();
+                currentProfile = profile.getProfile(profileName);
+            } else {
+                return -1;
+            }
+        } else {
+            currentProfile = profile.getProfile(profileName);
+        }
     }
     
     //if less than 50ms, then don't turn on at all
     function turnRelayOn(duration) {
-        if (duration >= 1000) {
+        if (duration >= 900) {
             relay.writeSync(1);
         } else if (duration > 50) {
             relay.writeSync(1);
@@ -134,11 +155,6 @@ module.exports = function(socketio, tempSensor) {
 
     function fanOff() {
         fan.writeSync(0);
-    }
-    
-    function updateStatus(newStatus) {
-        status = newStatus;
-        socketio.emit("status_update", {new_status: status})
     }
 
     //load a profile when initalizing 
