@@ -22,12 +22,11 @@ module.exports.saveProfile = function(profile) {
         return validCode;
     }
     
-    var filename = profile.name;
-    profile = JSON.stringify(profile, null, 3);
     if (getNumProfiles() >= MAX_PROFILES) {
         deleteOldestProfile();
     }
-    fs.writeFileSync(profileDir + '/' + filename + '.json', profile);
+    
+    fs.writeFileSync(profileDir + '/' + profile.name + '.json', JSON.stringify(profile, null, 3));
     //add to all profiles list
     updateProfileList();
     return validCode;

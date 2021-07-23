@@ -5,7 +5,7 @@ import './App.css';
 import Home from './views/home';
 import Settings from './views/settings';
 import ProfileList from './views/profileList';
-
+import StatusBar from './components/StatusBar';
 
 
 //import Profile from './components/Profile';
@@ -39,18 +39,16 @@ class App extends Component {
         <div className="App">
         <Router>
           <SocketContext.Provider value={socket}>
+            
             <Switch>
-              <Route exact path="/" >
-                <Home />
+              
+              <Route exact path="/" component={Home}>
               </Route>
-              <Route path="/editProfile" >
-                <EditProfile />
+              <Route path="/editProfile" component={EditProfile} >
               </Route>
-              <Route path="/profileList" >
-                <ProfileList />
+              <Route path="/profileList" component={ProfileList}>
               </Route>
-              <Route path="/settings" >
-                <Settings />
+              <Route path="/settings" component={Settings}>
               </Route>
             </Switch>
           </SocketContext.Provider>

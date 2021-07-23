@@ -65,7 +65,7 @@ module.exports = function(socketio, tempSensor) {
         tempHistory = [];
         
         //need to implement status update for heating, reflow, cooling
-        currentAction = "Running";;
+        currentAction = "Running";
     
         fanOn();
 
@@ -95,6 +95,9 @@ module.exports = function(socketio, tempSensor) {
             }
             tempHistory.push({ x: i, y: tempSensor.getTemp() });
             percentDone = Math.floor((i / datapoints[datapoints.length - 1].x) * 100);
+            if (percentDone > 100) {
+                percentDone = 100;
+            }
             i++;
         }, 1000);
 
@@ -116,7 +119,7 @@ module.exports = function(socketio, tempSensor) {
             temperature: tempSensor.getTemp(),
             current_profile: currentProfile,
             historic_temperature: tempHistory,
-            percentage: percentDone
+            percent: percentDone
         };
     }
     
@@ -124,17 +127,9 @@ module.exports = function(socketio, tempSensor) {
         return currentProfile;
     }
     
-    module.loadProfile = function (profileName, force) {
-        if (currentAction == "Running") {
-            if (force) {
-                module.stop();
-                currentProfile = profile.getProfile(profileName);
-            } else {
-                return -1;
-            }
-        } else {
-            currentProfile = profile.getProfile(profileName);
-        }
+    module.loadProfile = function (profileName) {
+        module.stop();
+        currentProfile = profile.getProfile(profileName);
     }
     
     //if less than 50ms, then don't turn on at all

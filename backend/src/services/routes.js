@@ -1,6 +1,25 @@
 
 
 module.exports = function (app, express, socketio) {
+
+    const os = require("os");
+    //https://stackoverflow.com/questions/3653065/get-local-ip-address-in-node-js
+    const nets = os.networkInterfaces();
+    const addressResults = Object.create({}); // Or just '{}', an empty object
+
+    for (const name of Object.keys(nets)) {
+        for (const net of nets[name]) {
+            // Skip over non-IPv4 and internal (i.e. 127.0.0.1) addresses
+            if (net.family === 'IPv4' && !net.internal) {
+                if (!addressResults[name]) {
+                    addressResults[name] = [];
+                }
+                addressResults[name].push(net.address);
+            }
+        }
+    }
+
+
     //const bodyParser = require("body-parser");
     const { request } = require('express');
     const profile = require('../models/profile');
@@ -39,9 +58,18 @@ module.exports = function (app, express, socketio) {
     });
 
     app.post("/api/reflow_profiles/load", (req, res) => {
-        oven.loadProfile(req.body.profile_name, true);
-        res.json({message: "loading profile"});
-        profile.updateLastRun(req.body.profile_name);
+        if (oven.getStatus().status !== "Ready") {
+            if (req.body.force_load) {
+                oven.loadProfile(req.body.profile_name);
+                res.json({ status: 200, message: "loading profile" });
+            } else {
+                res.json({ status: 409, message: "oven currently running" });
+            }
+        } else {
+            oven.loadProfile(req.body.profile_name);
+            profile.updateLastRun(req.body.profile_name);
+            res.json({ status: 200, message: "loading profile" });
+        }
     });
 
     app.get("/api/reflow_profiles/list", (req, res) => {
@@ -52,17 +80,32 @@ module.exports = function (app, express, socketio) {
         res.json(profile.getAllProfiles());
     });
 
+    app.get("/api/server_address", (req, res) => {
+        res.json(addressResults);
+    });
+
     //statically serve files from folder
     app.use('/api/reflow_profiles', express.static('reflow_profiles'));
 
     app.post("/api/reflow_profiles/save", (req, res) => {
         var validCode = profile.saveProfile(req.body);
         if (validCode == 0) {
-            res.status(201).json({ message: "Saved successfully" });
+            res.json({ status: 200, message: "Saved successfully" });
         } else if (validCode == 1) {
-            res.status(406).json({ message: "Error: bad data" });
+            res.json({ status: 409, message: "Error: bad data" });
         } else if (validCode == 2) {
-            res.status(406).json({ message: "Error: bad file" });
+            res.json({ status: 409, message: "Error: bad file" });
+        }
+    });
+
+    app.post("/api/settings/pid", (req, res) => {
+        var validCode = oven.savePIDSettings(req.body);
+        if (validCode == 0) {
+            res.json({ status: 200, message: "Saved successfully" });
+        } else if (validCode == 1) {
+            res.json({ status: 409, message: "Error: bad data" });
+        } else if (validCode == 2) {
+            res.json({ status: 409, message: "Error: bad file" });
         }
     });
 
@@ -87,6 +130,8 @@ module.exports = function (app, express, socketio) {
         oven.stop();
         res.json({ message: "stopped" });
     });
+
+    app.use("*", express.static("../frontend/build"));
 
     var interval = setInterval(() => {
         socketio.emit("status_update", oven.getStatus());

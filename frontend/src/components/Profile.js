@@ -27,7 +27,7 @@ class Profile extends Component {
           max: 300,
           stepSize: 1,
           title: {
-            text: 'Temperature',
+            text: 'Temperature (°C)',
             display: true,
             color: 'rgba(41, 216, 255, 0.7)',
             font: {

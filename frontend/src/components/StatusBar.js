@@ -2,6 +2,7 @@ import { React, Component } from 'react';
 import { socket } from '../helpers/socket';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
+import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
 import IconButton from '@material-ui/core/IconButton';
 import MenuIcon from '@material-ui/icons/Menu';
@@ -9,6 +10,9 @@ import HomeIcon from '@material-ui/icons/Home';
 import HistoryIcon from '@material-ui/icons/History';
 import SettingsIcon from '@material-ui/icons/Settings';
 import { Link } from "react-router-dom";
+import axios from 'axios';
+import StopIcon from '@material-ui/icons/Stop';
+
 import { ListItem, Drawer, ListItemText, ListItemIcon, Divider } from '@material-ui/core';
 
 import { LinearProgress, Grid } from '@material-ui/core';
@@ -19,8 +23,15 @@ class StatusBar extends Component {
         this.componentDidMount = this.componentDidMount.bind(this);
         this.componentWillUnmount = this.componentWillUnmount.bind(this);
         this.drawerChange = this.drawerChange.bind(this);
-        this.state = { drawer: false };
-        this.state = { percentage: 0, temperature: 0, status: "Ready" };
+        this.stop = this.stop.bind(this);
+        this.state = { drawer: false, percentage: 0, temperature: 0, status: "Ready", address: ":", currentProfile: "" };
+    }
+
+    stop() {
+        axios.post('/api/stop', { reason: "test" })
+            .then(res => {
+                //console.log(res);
+            });
     }
 
     componentDidMount() {
@@ -28,9 +39,15 @@ class StatusBar extends Component {
             this.setState({
                 percentage: message.percent,
                 temperature: message.temperature,
-                status: message.status
+                status: message.status,
+                currentProfile: message.current_profile
             });
         });
+        fetch('/api/server_address')
+            .then(response => response.json())
+            .then(result => {
+                this.setState({ address: result["Ethernet"][0] });
+            });
     }
 
     drawerChange() {
@@ -53,25 +70,37 @@ class StatusBar extends Component {
                         <IconButton edge="start" color="inherit" aria-label="menu" onClick={this.drawerChange}>
                             <MenuIcon />
                         </IconButton>
-                        <Grid container spacing={3}>
+                        <Grid container spacing={5}>
                             <Grid item>
                                 <Typography  >
-                                    Address: ovenpi.local:3001
+                                    Address: {this.state.address}
                                 </Typography>
                             </Grid>
                             <Grid item>
                                 <Typography >
-                                    Temperature: {this.state.temperature}
+                                    {this.state.temperature} °C
                                 </Typography>
                             </Grid>
                             <Grid item>
                                 <Typography  >
-                                    Status: {this.state.status}
+                                    {this.state.status}
                                 </Typography>
                             </Grid>
+                            <Grid item>
+                                <Typography  >
+                                    {this.state.currentProfile.name}
+                                </Typography>
+                            </Grid>
+
                         </Grid>
+                        <div style={{ marginLeft: 'auto' }}>
+                            {this.state.status !== "Ready" &&
+                                <Button onClick={this.stop} startIcon={<StopIcon />} variant="contained" color="secondary">Stop</Button>
+                            }
+                        </div>
+
                     </Toolbar>
-                    <LinearProgress variant="determinate" value={100} />
+                    <LinearProgress variant="determinate" value={this.state.percentage} />
                 </AppBar>
 
                 <Drawer open={this.state.drawer} onClose={this.drawerChange} >
