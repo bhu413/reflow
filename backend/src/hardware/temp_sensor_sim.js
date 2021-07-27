@@ -9,7 +9,6 @@ module.exports = function(socketio) {
     
     function updateTemp() {
         currentTemp = Math.floor(Math.random() * 300) + 30;
-        socketio.emit("temperature_update", {temperature: currentTemp});
     }
 
     const interval = setInterval(updateTemp, 1000);

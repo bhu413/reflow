@@ -1,7 +1,6 @@
 import React, { Component } from "react";
 import { Scatter } from 'react-chartjs-2';
 //import * as zoom from 'chartjs-plugin-zoom'
-//import { Button } from 'semantic-ui-react';
 import {DraggableGraph} from './DraggableGraph';
 
 
@@ -16,6 +15,8 @@ class Profile extends Component {
       hitRadius = 30;
     }
     this.options = {
+      maintainAspectRatio: true,
+      responsive: true,
       pointHitRadius: hitRadius,
       animation: {
         duration: 0,
@@ -26,7 +27,7 @@ class Profile extends Component {
           max: 300,
           stepSize: 1,
           title: {
-            text: 'Temperature',
+            text: 'Temperature (°C)',
             display: true,
             color: 'rgba(41, 216, 255, 0.7)',
             font: {
@@ -86,8 +87,7 @@ class Profile extends Component {
           display: false,
         },
         title: {
-          display: true,
-          text: this.props.profile.name
+          display: false,
         },
       },
     };
@@ -109,8 +109,8 @@ class Profile extends Component {
               backgroundColor: 'rgba(42, 216, 255, 0.2)',
               borderColor: 'rgba(42, 216, 255, 1)',
               borderWidth: 1,
-              pointRadius: 10,
-              hoverRadius: 20,
+              pointRadius: 5,
+              hoverRadius: 10,
               dragData: this.props.draggable,
             },
             {
@@ -123,7 +123,8 @@ class Profile extends Component {
               pointRadius: 1,
               hoverRadius: 2,
               dragData: false,
-              borderDash: [10,5],
+              borderDash: [10, 5],
+              fill: 0,
             },
           ],
         }} options={this.options} />  

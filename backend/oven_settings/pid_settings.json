@@ -1,0 +1,7 @@
+{
+    "onoff_mode": true,
+    "lookahead": 0,
+    "p": 30,
+    "i": 1,
+    "d": 1
+}

@@ -1,64 +1,91 @@
 import { React, Component } from 'react';
-import Temperature from '../components/Temperature';
+
 import Profile from '../components/Profile';
-import Status from '../components/Status';
-import { Button } from 'semantic-ui-react';
-import 'semantic-ui-css/semantic.min.css';
+import EditIcon from '@material-ui/icons/Edit';
+import { Button, Container, Grid } from '@material-ui/core';
 import { Link } from "react-router-dom";
 import { socket } from '../helpers/socket';
-import axios from'axios';
+import axios from 'axios';
+import PlayArrowIcon from '@material-ui/icons/PlayArrow';
+import StopIcon from '@material-ui/icons/Stop';
+import StatusBar from '../components/StatusBar';
+import { styled } from '@material-ui/core/styles';
 
 class Home extends Component {
     constructor() {
       super();
       this.runProfile = this.runProfile.bind(this);
       this.stop = this.stop.bind(this);
-      this.state = ({currentProfile: '', historicTemperature: [], percentDone: 0});
-    }
+      this.state = ({ currentProfile: '', historicTemperature: [], percentDone: 0, status: "Ready" });
+      
+  }
+  
+  StartButton = styled(Button)({
+    background: '#3dd900',
+    '&:hover': '#3dd900'
+  });
 
     componentDidMount() {
-      fetch('/current_profile')
+      fetch('/api/current_profile')
       .then(response => response.json())
-      .then(result => {
+        .then(result => {
         this.setState({ currentProfile: result.current_profile});
       });
-      socket.on("new_profile", (message) => {
-        this.setState({currentProfile: message.current_profile});
-      });
-      socket.on("historic_temperature_update", (message) => {
-        this.setState({historicTemperature: message.historic_temperature, percentDone: message.percent});
+      socket.on("status_update", (message) => {
+        this.setState({
+          currentProfile: message.current_profile,
+          historicTemperature: message.historic_temperature,
+          status: message.status
+        });
       });
     }
 
     componentWillUnmount() {
-      socket.off("new_profile");
-      socket.off("historic_temperature_update");
+      socket.off("status_update");
     }
 
     runProfile() {
-      axios.post('/run', {profile_name: this.state.currentProfile.name})
+      axios.post('/api/run', {profile_name: this.state.currentProfile.name})
       .then(res => {
-        console.log(res);
       });
     }
 
     stop() {
-      axios.post('/stop', {reason: "test"})
+      axios.post('/api/stop', {reason: "test"})
       .then(res => {
         //console.log(res);
       });
     }
 
-    render() {
-      return (
-        <>
-            <Temperature />
-            <Status />
-            <Profile draggable={false} profile={this.state.currentProfile} historicTemps={this.state.historicTemperature} />
-            <Button as={Link} to='/profileList' inverted color='blue'>Past Profiles</Button>
-            <Button as={Link} to={{pathname: '/editProfile', state: {profile: this.state.currentProfile}}} inverted color='blue'>Edit Profile</Button>
-            <Button onClick={this.runProfile} inverted color='green'>Start</Button>
-            <Button onClick={this.stop} inverted color='red'>Stop</Button>
+  render() {
+    const isRunning = this.state.status !== "Ready";
+    let stopStartButton;
+    if (isRunning) {
+      stopStartButton = <Button onClick={this.stop} startIcon={<StopIcon />} variant="contained" color="secondary">Stop</Button>;
+    } else {
+      stopStartButton = <this.StartButton onClick={this.runProfile} startIcon={<PlayArrowIcon />} variant="contained" color="primary">Start</this.StartButton>;
+    }
+    return (
+      <>
+          
+        <StatusBar />
+        <div style={{  paddingTop: "30px", width: '82%', margin: '0 auto'}}>
+          <Profile draggable={false} profile={this.state.currentProfile} historicTemps={this.state.historicTemperature} />
+        </div>
+          
+        <Container maxWidth={false}>
+          <Grid container spacing={3} alignItems="center" justify="center">
+            <Grid item>
+              <Button component={Link} to={{ pathname: '/editProfile', state: { profile: this.state.currentProfile } }} startIcon={<EditIcon />} variant="contained" color="primary" >Edit Current Profile</Button>
+            </Grid>
+            <Grid item>
+              {stopStartButton}
+            </Grid>
+          </Grid>
+        </Container>
+        
+        
+          
         </>
       );
     }

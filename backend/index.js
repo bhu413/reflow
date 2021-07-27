@@ -1,9 +1,13 @@
 // server/index.js
 
-const os = require('os');
+const os = require("os");
+const PORT = process.env.PORT || 3001;
 const express = require("express");
 const app = express();
-const server = require("http").createServer(app);
+const server = app.listen(PORT, () => {
+  console.log(`Listening on port ${PORT}`);
+});
+
 
 //make socketIO listen on same port as server
 const io = require("socket.io")(server);
@@ -19,14 +23,11 @@ io.on("connection", (socket) => {
 });
 
 
-const PORT = process.env.PORT || 3001;
+
 
 require("./src/services/routes")(app, express, io);
 //require("./src/services/test-routes")(app);
 
-server.listen(PORT, () => console.log(`Listening on port ${PORT}`));
 
 
 
-
-//console.log(os.networkInterfaces());
