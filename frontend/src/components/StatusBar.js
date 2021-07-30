@@ -133,7 +133,7 @@ class StatusBar extends Component {
                         </div>
 
                     </Toolbar>
-                    <LinearProgress variant="determinate" value={this.state.percentage} />
+                    <LinearProgress variant="determinate" color='secondary' value={this.state.percentage} />
                 </AppBar>
 
                 <Drawer open={this.state.drawer} onClose={this.drawerChange} >

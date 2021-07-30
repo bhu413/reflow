@@ -160,7 +160,7 @@ class Home extends Component {
 
 
 
-          <Grid container spacing={3} alignItems="center" justify="flex-end" style={{ paddingTop: '10px' }}>
+          <Grid container spacing={3} alignItems="center" justify="flex-end" style={{ paddingTop: '35px' }}>
             <Grid item>
               <Button component={Link} to={{ pathname: '/editProfile', state: { profile: this.state.currentProfile } }} startIcon={<EditIcon />} variant="contained" color="primary" >Edit Current Profile</Button>
             </Grid>
