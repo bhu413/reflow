@@ -5,8 +5,10 @@ module.exports = function(socketio, tempSensor) {
     const hardwareSettings = require('../models/hardware_settings');
     const pidSettings = require('../models/pid_settings');
     const Gpio = require('onoff').Gpio;
-    var relay;
-    var fan;
+    
+    //set gpio
+    relay = new Gpio(hardwareSettings.getRelayPin(), 'out');
+    fan = new Gpio(hardwareSettings.getFanPin(), 'out');
 
     //list of things to export
     var module = {};
@@ -72,7 +74,7 @@ module.exports = function(socketio, tempSensor) {
             currentAction = "Running";
         }
 
-        //set gpio
+        //reset gpio in case of settings change
         relay = new Gpio(hardwareSettings.getRelayPin(), 'out');
         fan = new Gpio(hardwareSettings.getFanPin(), 'out');
     
