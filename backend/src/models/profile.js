@@ -13,6 +13,7 @@ var profilesList = [];
 function validate(profile) {
     //check for invalid file characters
     //must have at least 2 data points
+    //datapoints must be in order
     return 0;
 }
 
@@ -40,14 +41,17 @@ module.exports.getAllProfiles = function () {
     return profilesList;
 }
 
-module.exports.getProfile = function(profileName) {
+module.exports.getProfile = function (profileName) {
+    if (profileName == '') {
+        return JSON.parse(fs.readFileSync('./default_reflow_profiles/flat.json'));
+    }
     return JSON.parse(fs.readFileSync(profileDir + '/' + profileName + '.json'));
 }
 
 module.exports.updateLastRun = function(profileName) {
     var profile = module.exports.getProfile(profileName);
     profile.last_run = Date.now();
-    profile = JSON.stringify(profile);
+    profile = JSON.stringify(profile, null, 3);
     fs.writeFileSync(profileDir + '/' + profileName + '.json', profile);
     updateProfileList();
 }

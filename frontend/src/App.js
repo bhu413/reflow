@@ -5,6 +5,7 @@ import './App.css';
 import Home from './views/home';
 import Settings from './views/settings';
 import ProfileList from './views/profileList';
+import NotFound from './views/notFound';
 import StatusBar from './components/StatusBar';
 
 
@@ -21,7 +22,7 @@ import EditProfile from "./views/editProfile";
 class App extends Component {
   constructor(props) {
     super(props);
-    this.componentWillUnmount = this.componentWillUnmount.bind(this);
+    this.state = { address: ":", temperature: 0, status: "Ready", currentProfile: "" };
 
   }
 
@@ -50,6 +51,7 @@ class App extends Component {
               </Route>
               <Route path="/settings" component={Settings}>
               </Route>
+              <Route component={NotFound} />
             </Switch>
           </SocketContext.Provider>
           </Router>

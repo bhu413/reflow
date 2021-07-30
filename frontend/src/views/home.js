@@ -1,8 +1,11 @@
 import { React, Component } from 'react';
-
+import Stepper from '@material-ui/core/Stepper';
+import Step from '@material-ui/core/Step';
+import StepLabel from '@material-ui/core/StepLabel';
+import StepContent from '@material-ui/core/StepContent';
 import Profile from '../components/Profile';
 import EditIcon from '@material-ui/icons/Edit';
-import { Button, Container, Grid } from '@material-ui/core';
+import { Button, Container, Grid, Typography, Box } from '@material-ui/core';
 import { Link } from "react-router-dom";
 import { socket } from '../helpers/socket';
 import axios from 'axios';
@@ -12,53 +15,126 @@ import StatusBar from '../components/StatusBar';
 import { styled } from '@material-ui/core/styles';
 
 class Home extends Component {
-    constructor() {
-      super();
-      this.runProfile = this.runProfile.bind(this);
-      this.stop = this.stop.bind(this);
-      this.state = ({ currentProfile: '', historicTemperature: [], percentDone: 0, status: "Ready" });
-      
+  constructor() {
+    super();
+    this.runProfile = this.runProfile.bind(this);
+    this.stop = this.stop.bind(this);
+    this.state = ({
+      currentProfile: {
+        "name": "flat",
+        "date_created": 0,
+        "last_run": 0,
+        "datapoints": [
+          {
+            "x": 0,
+            "y": 30
+          },
+          {
+            "x": 75,
+            "y": 30
+          },
+          {
+            "x": 150,
+            "y": 30
+          },
+          {
+            "x": 225,
+            "y": 30
+          },
+          {
+            "x": 300,
+            "y": 30
+          },
+          {
+            "x": 375,
+            "y": 30
+          }
+        ]
+      },
+      historicTemperature: [],
+      percentDone: 0,
+      status: "Ready",
+      activeStep: 0
+    });
+
   }
-  
+
+  steps = [
+    {
+      label: 'Ready'
+    },
+    {
+      label: 'Preheat',
+      description: ''
+    },
+    {
+      label: 'Run Profile',
+      description: ''
+    },
+    {
+      label: 'Cooling',
+      description: ''
+    }
+  ];
+
   StartButton = styled(Button)({
     background: '#3dd900',
     '&:hover': '#3dd900'
   });
 
-    componentDidMount() {
-      fetch('/api/current_profile')
+  componentDidMount() {
+    fetch('/api/current_profile')
       .then(response => response.json())
-        .then(result => {
-        this.setState({ currentProfile: result.current_profile});
+      .then(result => {
+        this.setState({ currentProfile: result.current_profile });
       });
-      socket.on("status_update", (message) => {
-        this.setState({
-          currentProfile: message.current_profile,
-          historicTemperature: message.historic_temperature,
-          status: message.status
-        });
+    socket.on("status_update", (message) => {
+      this.setState({
+        currentProfile: message.current_profile,
+        historicTemperature: message.historic_temperature,
+        status: message.status
       });
-    }
+      if (this.state.status === "Ready") {
+        this.setState({ activeStep: 0 });
+      } else if (this.state.status === "Preheat") {
+        this.setState({ activeStep: 1 });
+      } else if (this.state.status === "Running") {
+        this.setState({ activeStep: 2 });
+      } else if (this.state.status === "Cooling") {
+        this.setState({ activeStep: 3 });
+      }
+    });
+  }
 
-    componentWillUnmount() {
-      socket.off("status_update");
-    }
+  //need to fix
+  shouldComponentUpdate(nextState) {
+    return true;
+  }
 
-    runProfile() {
-      axios.post('/api/run', {profile_name: this.state.currentProfile.name})
+  componentWillUnmount() {
+    socket.off("status_update");
+  }
+
+  runProfile() {
+    axios.post('/api/run', { override: false })
       .then(res => {
+        if (res.data.status === 200) {
+          this.setState({ status: "Running" });
+        }
       });
-    }
+  }
 
-    stop() {
-      axios.post('/api/stop', {reason: "test"})
+  stop() {
+    axios.post('/api/stop', { reason: "test" })
       .then(res => {
-        //console.log(res);
+        if (res.data.status === 200) {
+          this.setState({ status: "Ready" });
+        }
       });
-    }
+  }
 
   render() {
-    const isRunning = this.state.status !== "Ready";
+    const isRunning = this.state.status === "Preheat" || this.state.status === "Running" ;
     let stopStartButton;
     if (isRunning) {
       stopStartButton = <Button onClick={this.stop} startIcon={<StopIcon />} variant="contained" color="secondary">Stop</Button>;
@@ -67,14 +143,35 @@ class Home extends Component {
     }
     return (
       <>
-          
+
         <StatusBar />
-        <div style={{  paddingTop: "30px", width: '82%', margin: '0 auto'}}>
-          <Profile draggable={false} profile={this.state.currentProfile} historicTemps={this.state.historicTemperature} />
-        </div>
-          
         <Container maxWidth={false}>
-          <Grid container spacing={3} alignItems="center" justify="center">
+          <Grid container>
+            <Grid item sm={2}>
+              <Box sx={{ paddingTop: 20}}>
+                <Stepper activeStep={this.state.activeStep} orientation='vertical' style={{ background: '#454647' }}>
+                  {this.steps.map((step, index) => (
+                    <Step key={step.label} >
+                      <StepLabel>
+                        <Typography variant='subtitle2' align='left' style={{color: '#FFFFFF'}}>
+                          {step.label}
+                        </Typography>
+                      </StepLabel>
+                    </Step>
+                  ))}
+                </Stepper>
+              </Box>
+            </Grid>
+            <Grid item sm={10}>
+              <div style={{ paddingTop: "20px", width: '96%', margin: '0 0 0 auto' }}>
+                <Profile draggable={false} profile={this.state.currentProfile} historicTemps={this.state.historicTemperature} />
+              </div>
+            </Grid>
+          </Grid>
+
+
+
+          <Grid container spacing={3} alignItems="center" justify="flex-end" style={{ paddingTop: '35px' }}>
             <Grid item>
               <Button component={Link} to={{ pathname: '/editProfile', state: { profile: this.state.currentProfile } }} startIcon={<EditIcon />} variant="contained" color="primary" >Edit Current Profile</Button>
             </Grid>
@@ -83,12 +180,9 @@ class Home extends Component {
             </Grid>
           </Grid>
         </Container>
-        
-        
-          
-        </>
-      );
-    }
+      </>
+    );
+  }
 }
 
 export default Home;
