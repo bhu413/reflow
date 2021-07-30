@@ -94,6 +94,15 @@ class Home extends Component {
         historicTemperature: message.historic_temperature,
         status: message.status
       });
+      if (this.state.status === "Ready") {
+        this.setState({ activeStep: 0 });
+      } else if (this.state.status === "Preheat") {
+        this.setState({ activeStep: 1 });
+      } else if (this.state.status === "Running") {
+        this.setState({ activeStep: 2 });
+      } else if (this.state.status === "Cooling") {
+        this.setState({ activeStep: 3 });
+      }
     });
   }
 
@@ -125,7 +134,7 @@ class Home extends Component {
   }
 
   render() {
-    const isRunning = this.state.status !== "Ready";
+    const isRunning = this.state.status === "Preheat" || this.state.status === "Running" ;
     let stopStartButton;
     if (isRunning) {
       stopStartButton = <Button onClick={this.stop} startIcon={<StopIcon />} variant="contained" color="secondary">Stop</Button>;
@@ -143,8 +152,10 @@ class Home extends Component {
                 <Stepper activeStep={this.state.activeStep} orientation='vertical' style={{ background: '#454647' }}>
                   {this.steps.map((step, index) => (
                     <Step key={step.label} >
-                      <StepLabel style={{ color: '#FFFFFF' }}>
-                        {step.label}
+                      <StepLabel>
+                        <Typography variant='subtitle2' align='left' style={{color: '#FFFFFF'}}>
+                          {step.label}
+                        </Typography>
                       </StepLabel>
                     </Step>
                   ))}

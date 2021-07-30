@@ -144,7 +144,7 @@ class ProfileList extends Component {
             </div>
           </DialogContent>
           <DialogActions>
-            <Button startIcon={<SaveAltIcon />} variant="contained" color="primary" onClick={this.downloadProfile}>Download</Button>
+            {/*<Button startIcon={<SaveAltIcon />} variant="contained" color="primary" onClick={this.downloadProfile}>Download</Button>*/}
             <Button component={Link} to={{ pathname: '/editProfile', state: { profile: this.state.activeItem } }} startIcon={<EditIcon />} variant="contained" color="primary">Edit Profile</Button>
             <this.SelectButton onClick={this.loadClicked} startIcon={<DoneIcon />} variant="contained">Load</this.SelectButton>
           </DialogActions>
@@ -169,7 +169,7 @@ class ProfileList extends Component {
 
         <Container maxWidth={false}>
           <Grid container direction={"row"} align={"center"} justifyContent={"center"} spacing={2}>
-            <Grid item xs={12} md={8} lg={6} style={{paddingTop: '20px'}}>
+            <Grid item xs={11} md={8} lg={6} style={{paddingTop: '20px'}}>
               <this.MyDataGrid
                 rows={this.state.profiles}
                 rowHeight={45}
@@ -185,12 +185,12 @@ class ProfileList extends Component {
         </Container>
         
         <Container maxWidth={false}>
-          <Grid container spacing={3} alignItems="center" justify="center">
+          <Grid container spacing={3} justifyContent="flex-end" style={{paddingRight: 8}}>
             <Grid item>
               <Button component={Link} to="/" startIcon={<CancelIcon />} variant="contained" color="primary">Cancel</Button>
             </Grid>
             <Grid item>
-              <Button startIcon={<PublishIcon />} variant="contained" color="primary" component="label" >Upload<input type="file" accept=".json" hidden onChange={this.fileChanged} /></Button>
+              {/*<Button startIcon={<PublishIcon />} variant="contained" color="primary" component="label" >Upload<input type="file" accept=".json" hidden onChange={this.fileChanged} /></Button>*/}
             </Grid>
           </Grid>
         </Container>

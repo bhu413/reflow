@@ -11,20 +11,21 @@ import axios from 'axios';
 class PidSettings extends Component {
     constructor() {
         super();
-        this.state = { p: 0, i: 0, d: 0, lookAhead: 0, preheat: false, inputChanged: false };
+        this.state = { p: 0, i: 0, d: 0, lookAhead: 0, preheat: false, preheatPower: 0, inputChanged: false };
         this.save = this.save.bind(this);
         this.handlePChange = this.handlePChange.bind(this);
         this.handleIChange = this.handleIChange.bind(this);
         this.handleDChange = this.handleDChange.bind(this);
         this.handlePreheatChange = this.handlePreheatChange.bind(this);
         this.handleLookAheadChange = this.handleLookAheadChange.bind(this);
+        this.handlePreheatPowerChange = this.handlePreheatPowerChange.bind(this);
     }
 
     componentDidMount() {
         fetch('/api/settings/pid')
             .then(response => response.json())
             .then(result => {
-                this.setState({ p: result.p, i: result.i, d: result.d, lookAhead: result.look_ahead, preheat: result.preheat });
+                this.setState({ p: result.p, i: result.i, d: result.d, lookAhead: result.look_ahead, preheat: result.preheat, preheatPower: result.preheat_power });
             });
     }
 
@@ -35,6 +36,7 @@ class PidSettings extends Component {
         newSettings.d = this.state.d;
         newSettings.look_ahead = this.state.lookAhead;
         newSettings.preheat = this.state.preheat;
+        newSettings.preheat_power = this.state.preheatPower;
         axios.post('/api/settings/pid', newSettings)
             .then(res => {
                 if (res.data.status === 200) {
@@ -63,6 +65,12 @@ class PidSettings extends Component {
 
     handlePreheatChange(e) {
         this.setState({ preheat: e.target.checked, inputChanged: true });
+    }
+
+    handlePreheatPowerChange(e) {
+        if (e.target.value >= 0 && e.target.value <= 1) {
+            this.setState({ preheatPower: e.target.value, inputChanged: true });
+        }
     }
 
 
@@ -99,11 +107,19 @@ class PidSettings extends Component {
                             <TextField variant="outlined" type='number' value={this.state.lookAhead} onChange={this.handleLookAheadChange} />
                         </Grid>
                         <Grid item>
-                            <Typography align='left'>
-                                Enable Preheat
-                            </Typography>
-                            <Switch checked={this.state.preheat} onChange={this.handlePreheatChange} color='primary' />
+                            <Grid container spacing={3}>
+                                <Grid item>
+                                    <Typography align='left'>
+                                        Enable Preheat
+                                    </Typography>
+                                    <Switch checked={this.state.preheat} onChange={this.handlePreheatChange} color='primary' />
+                                </Grid>
+                                <Grid item>
+                                    <TextField variant="outlined" type='number' label='Preheat Power' value={this.state.preheatPower} onChange={this.handlePreheatPowerChange} />
+                                </Grid>
+                            </Grid>
                         </Grid>
+                        
                         <Grid container justifyContent='flex-end' spacing={3}>
                             <Grid item>
                                 <Button variant='contained' color='primary' disabled={!this.state.inputChanged} onClick={this.save}>

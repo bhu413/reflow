@@ -10,15 +10,17 @@ import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
 import Snackbar from '@material-ui/core/Snackbar';
 import Button from '@material-ui/core/Button';
+import TextField from '@material-ui/core/TextField';
 import MuiAlert from '@material-ui/lab/Alert';
 import axios from 'axios';
 
 class HardwareSettings extends Component {
     constructor() {
         super();
-        this.state = { relayPin: 0, fanPin: 0, inputChanged: false, relayError: false, fanError: false };
+        this.state = { relayPin: 0, fanPin: 0, inputChanged: false, relayError: false, fanError: false, fanTimeout: 0 };
         this.handleRelayChange = this.handleRelayChange.bind(this);
         this.handleFanChange = this.handleFanChange.bind(this);
+        this.handleFanTimeoutChange = this.handleFanTimeoutChange.bind(this);
         this.errorClose = this.errorClose.bind(this);
         this.save = this.save.bind(this);
     }
@@ -27,7 +29,7 @@ class HardwareSettings extends Component {
         fetch('/api/settings/hardware')
             .then(response => response.json())
             .then(result => {
-                this.setState({ relayPin: result.relay_pin, fanPin: result.fan_pin });
+                this.setState({ relayPin: result.relay_pin, fanPin: result.fan_pin, fanTimeout: result.fan_timeout });
             });
     }
 
@@ -47,6 +49,12 @@ class HardwareSettings extends Component {
         }
     }
 
+    handleFanTimeoutChange(e) {
+        if (e.target.value >= 0) {
+            this.setState({ fanTimeout: e.target.value, inputChanged: true });
+        }
+    }
+
     errorClose() {
         this.setState({ relayError: false, fanError: false });
     }
@@ -55,6 +63,7 @@ class HardwareSettings extends Component {
         var newSettings = {};
         newSettings.relay_pin = this.state.relayPin;
         newSettings.fan_pin = this.state.fanPin;
+        newSettings.fan_timeout = this.state.fanTimeout;
         axios.post('/api/settings/hardware', newSettings)
             .then(res => {
                 if (res.data.status === 200) {
@@ -121,6 +130,9 @@ class HardwareSettings extends Component {
                                     <MenuItem value={27}>27 (pin 13)</MenuItem>
                                 </Select>
                             </FormControl>
+                        </Grid>
+                        <Grid item>
+                            <TextField variant="outlined" type='number' label='Fan off delay (seconds)' value={this.state.fanTimeout} onChange={this.handleFanTimeoutChange} />
                         </Grid>
                         <Grid container justifyContent='flex-end' spacing={3}>
                             <Grid item>

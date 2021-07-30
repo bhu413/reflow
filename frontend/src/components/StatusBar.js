@@ -127,7 +127,7 @@ class StatusBar extends Component {
 
                         </Grid>
                         <div style={{ marginLeft: 'auto' }}>
-                            {this.state.status !== "Ready" &&
+                            {this.state.status === "Preheat" || this.state.status === "Running" &&
                                 <Button onClick={this.stop} startIcon={<StopIcon />} variant="contained" color="secondary">Stop</Button>
                             }
                         </div>

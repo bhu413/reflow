@@ -15,6 +15,10 @@ import ClearIcon from '@material-ui/icons/Clear';
 import SaveIcon from '@material-ui/icons/Save';
 import AddIcon from '@material-ui/icons/Add';
 import RemoveIcon from '@material-ui/icons/Remove';
+import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward';
+import ArrowDownwardIcon from '@material-ui/icons/ArrowDownward';
+import ArrowBackIcon from '@material-ui/icons/ArrowBack';
+import ArrowForwardIcon from '@material-ui/icons/ArrowForward';
 import Paper from '@material-ui/core/Paper';
 import { styled } from '@material-ui/core/styles';
 
@@ -371,37 +375,27 @@ class EditProfile extends Component {
                 <Grid item>
                   <Paper style={{ background: '#454647' }}>
                     <Grid item>
-                      <Typography variant='subtitle1' style={{ color: 'white' }}>Seconds</Typography>
+                      <Typography variant='subtitle1' style={{ color: 'white' }}>Edit Point</Typography>
                     </Grid>
-                    <Grid container spacing={1} justifyContent='center'>
-                      <Grid item>
-                        <IconButton color='primary' size='small' onClick={this.subtractX}><RemoveIcon /></IconButton>
-                      </Grid>
-                      <Grid item xs>
-                        <Typography variant='h6' style={{ color: 'white' }}>{this.state.currentX}</Typography>
-                      </Grid>
-                      <Grid item>
-                        <IconButton color='primary' size='small' onClick={this.addX}><AddIcon /></IconButton>
-                      </Grid>
-                    </Grid>
-                  </Paper>
-                </Grid>
-
-                <Grid item>
-                  <Paper style={{ background: '#454647' }}>
                     <Grid item>
-                      <Typography variant='subtitle1' style={{ color: 'white' }}>°C</Typography>
+                      <IconButton color='primary' size='small' onClick={this.addY}><ArrowUpwardIcon /></IconButton>
                     </Grid>
-                    <Grid container spacing={1} justifyContent='center'>
-                      <Grid item>
-                        <IconButton color='primary' size='small' onClick={this.subtractY}><RemoveIcon /></IconButton>
+                    <Grid item>
+                      <Grid container justifyContent='space-evenly'>
+                        <Grid item>
+                          <IconButton color='primary' size='small' onClick={this.subtractX}><ArrowBackIcon /></IconButton>
+                        </Grid>
+                        <Grid item xs>
+                          <Typography variant='subtitle2' style={{ color: 'white', paddingTop: 5, fontSize: 12 }}>({this.state.currentX}, {this.state.currentY})</Typography>
+                        </Grid>
+                        <Grid item>
+                          <IconButton color='primary' size='small' onClick={this.addX}><ArrowForwardIcon /></IconButton>
+                        </Grid>
                       </Grid>
-                      <Grid item xs>
-                        <Typography variant='h6' style={{ color: 'white' }}>{this.state.currentY}</Typography>
-                      </Grid>
-                      <Grid item>
-                        <IconButton color='primary' size='small' onClick={this.addY}><AddIcon /></IconButton>
-                      </Grid>
+                    </Grid>
+                    
+                    <Grid item>
+                      <IconButton color='primary' size='small' onClick={this.subtractY}><ArrowDownwardIcon /></IconButton>
                     </Grid>
                   </Paper>
                 </Grid>

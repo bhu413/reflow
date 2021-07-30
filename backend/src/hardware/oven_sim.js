@@ -11,6 +11,7 @@ module.exports = function(socketio, tempSensor) {
     //current status
     var currentAction = "Ready";
     var interval;
+    var fanTimeout;
     var currentProfile;
     var tempHistory = [];
     var percentDone = 0;
@@ -47,10 +48,9 @@ module.exports = function(socketio, tempSensor) {
     }
 
     module.startProfile = function() {
-        if (currentProfile == null || currentAction != "Ready") {
+        if (currentProfile == null || currentAction === "Preheat" || currentAction === "Running") {
             return -1;
         }
-        
         var datapoints = currentProfile.datapoints;
         tempHistory = [];
 
@@ -61,44 +61,60 @@ module.exports = function(socketio, tempSensor) {
         var dt = pidSettings.getDeltaT();
         var lookAhead = pidSettings.getLookAhead();
         var onOffMode = pidSettings.getOnoff();
+        var preheat = pidSettings.getPreheat();
+        var preheatPower = pidSettings.getPreheatPower();
 
-        console.log(proportional + " " + integral + " " + derivative + " " + lookAhead);
-        
-        //need to implement status update for preheat, cooling
-        currentAction = "Running";
+        if (preheat) {
+            currentAction = "Preheat";
+        } else {
+            currentAction = "Running";
+        }
     
         fanOn();
 
         let ctr = new Controller(proportional, integral, derivative, dt); // k_p, k_i, k_d, dt
-        var i = 0;
+        var i = datapoints[0].x;
         interval = setInterval(() => {
             temperatureSnapshot = tempSensor.getTemp();
             if (temperatureSnapshot < 0) {
-                module.stop();
+                module.stop(true);
                 return -1;
             }
-            temperatureTarget = getTemperatureAtPoint(i + lookAhead);
-            if (onOffMode) {
-                if (temperatureTarget > temperatureSnapshot) {
-                    console.log("relay on");
+
+            if (preheat) {
+                currentAction = "Preheat";
+                if (temperatureSnapshot >= datapoints[0].y) {
+                    preheat = false;
+                    currentAction = "Running";
                 } else {
-                    console.log("relay off");
+                    turnRelayOn(preheatPower * 1000);
+                    tempHistory = [];
+                    tempHistory.push({ x: i, y: temperatureSnapshot });
                 }
             } else {
-                ctr.setTarget(temperatureTarget);
-                var correction = ctr.update(temperatureSnapshot);
-                console.log(correction);
-                turnRelayOn(correction);
-            }
-            if (i > datapoints[datapoints.length - 1].x + 30) {
-                module.stop();
-            }
-            tempHistory.push({ x: i, y: tempSensor.getTemp() });
-            percentDone = Math.floor((i / datapoints[datapoints.length - 1].x) * 100);
-            if (percentDone > 100) {
-                percentDone = 100;
-            }
-            i++;
+                temperatureTarget = getTemperatureAtPoint(i + lookAhead);
+                if (onOffMode) {
+                    if (temperatureTarget > temperatureSnapshot) {
+                        console.log("relay on");
+                    } else {
+                        console.log("relay off");
+                    }
+                } else {
+                    ctr.setTarget(temperatureTarget);
+                    var correction = ctr.update(temperatureSnapshot);
+                    console.log(correction);
+                    turnRelayOn(correction);
+                }
+                if (i > datapoints[datapoints.length - 1].x + 30) {
+                    module.stop(true);
+                }
+                tempHistory.push({ x: i, y: tempSensor.getTemp() });
+                percentDone = Math.floor((i / datapoints[datapoints.length - 1].x) * 100);
+                if (percentDone > 100) {
+                    percentDone = 100;
+                }
+                i++;
+            }         
         }, 1000);
 
         //io emit "user can open door"
@@ -106,11 +122,14 @@ module.exports = function(socketio, tempSensor) {
     }
     
     
-    module.stop = function () {
+    module.stop = function (shouldDelayFan) {
         clearInterval(interval);
-        //relay.pwmWrite(0)
-        fanOff();
-        currentAction = "Ready";;
+        console.log("relay off (gpio" + hardwareSettings.getRelayPin() + ")");
+        if (shouldDelayFan) {
+            fanOff(hardwareSettings.getFanTimeout() * 1000);
+        } else {
+            fanOff(0);
+        }
     }
     
     module.getStatus = function () {
@@ -128,7 +147,7 @@ module.exports = function(socketio, tempSensor) {
     }
     
     module.loadProfile = function (profileName) {
-        module.stop();
+        module.stop(false);
         currentProfile = profile.getProfile(profileName);
         tempHistory = [];
         percentDone = 0;
@@ -149,11 +168,21 @@ module.exports = function(socketio, tempSensor) {
     }
 
     function fanOn() {
+        clearTimeout(fanTimeout);
         console.log("fan on (gpio" + hardwareSettings.getFanPin() + ")");
     }
 
-    function fanOff() {
-        console.log("fan off (gpio" + hardwareSettings.getFanPin() + ")");
+    function fanOff(afterTimeout) {
+        if (afterTimeout === 0) {
+            console.log("fan off (gpio" + hardwareSettings.getFanPin() + ")");
+            currentAction = "Ready";
+        } else {
+            currentAction = "Cooling";
+            fanTimeout = setTimeout(function () {
+                console.log("fan off (gpio" + hardwareSettings.getFanPin() + ")");
+                currentAction = "Ready";
+            }, afterTimeout);
+        }
     }
     
     //load a profile when initalizing 
@@ -162,7 +191,7 @@ module.exports = function(socketio, tempSensor) {
     //if anything goes wrong, stop everything in the oven
     process.on('uncaughtException', (error) => {
         console.log(error);
-        module.stop();
+        module.stop(false);
         process.exit(1);
     });
 

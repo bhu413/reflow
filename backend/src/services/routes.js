@@ -138,7 +138,7 @@ module.exports = function (app, express, socketio) {
     });
 
     app.post("/api/run", (req, res) => {
-        if (oven.getStatus() == "Running") {
+        if (oven.getStatus() === "Running") {
             if (req.body.override) {
                 oven.startProfile();
                 res.json({ status: 200, message: "running profile" });
@@ -153,7 +153,7 @@ module.exports = function (app, express, socketio) {
 
     app.post("/api/stop", (req, res) => {
         var reason = req.body.reason;
-        oven.stop();
+        oven.stop(true);
         res.json({ status: 200, message: "stopped" });
     });
 

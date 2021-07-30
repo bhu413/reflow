@@ -10,6 +10,9 @@ module.exports.saveHardwareSettings = function (settings) {
     if (settings.hasOwnProperty('fan_pin')) {
         currentSettings.fan_pin = parseInt(settings.fan_pin, 10);
     }
+    if (settings.hasOwnProperty('fan_timeout')) {
+        currentSettings.fan_timeout = parseInt(settings.fan_timeout, 10);
+    }
 
     fs.writeFileSync(settingsDir + '/hardware_settings.json', JSON.stringify(currentSettings, null, 3));
 }
@@ -24,4 +27,8 @@ module.exports.getRelayPin = function () {
 
 module.exports.getFanPin = function () {
     return currentSettings.fan_pin;
+}
+
+module.exports.getFanTimeout = function () {
+    return currentSettings.fan_timeout;
 }

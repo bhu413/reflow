@@ -12,6 +12,7 @@ module.exports = function(socketio, tempSensor) {
     var module = {};
     var currentAction = "Ready";
     var interval;
+    var fanTimeout;
     var currentProfile;
     var tempHistory = [];
     var percentDone = 0;
@@ -48,10 +49,10 @@ module.exports = function(socketio, tempSensor) {
     }
 
     module.startProfile = function() {
-        if (currentProfile == null || currentAction != "Ready") {
+        if (currentProfile == null || currentAction === "Preheat" || currentAction === "Running") {
             return -1;
         }
-        
+
         var datapoints = currentProfile.datapoints;
         tempHistory = [];
 
@@ -62,57 +63,78 @@ module.exports = function(socketio, tempSensor) {
         var dt = pidSettings.getDeltaT();
         var lookAhead = pidSettings.getLookAhead();
         var onOffMode = pidSettings.getOnoff();
+        var preheat = pidSettings.getPreheat();
+        var preheatPower = pidSettings.getPreheatPower();
+
+        if (preheat) {
+            currentAction = "Preheat";
+        } else {
+            currentAction = "Running";
+        }
 
         //set gpio
         relay = new Gpio(hardwareSettings.getRelayPin(), 'out');
         fan = new Gpio(hardwareSettings.getFanPin(), 'out');
-
-        //need to implement status update for preheat, cooling
-        currentAction = "Running";
     
         fanOn();
 
         let ctr = new Controller(proportional, integral, derivative, dt); // k_p, k_i, k_d, dt
-        var i = 0;
+        var i = datapoints[0].x;
         interval = setInterval(() => {
             temperatureSnapshot = tempSensor.getTemp();
             if (temperatureSnapshot < 0) {
-                module.stop();
+                module.stop(true);
                 return -1;
             }
-            temperatureTarget = getTemperatureAtPoint(i + lookAhead);
-            if (onOffMode) {
-                if (temperatureTarget > temperatureSnapshot) {
-                    relay.writeSync(1);
+
+            if (preheat) {
+                if (temperatureSnapshot >= datapoints[0].y) {
+                    preheat = false;
+                    currentAction = "Running";
                 } else {
-                    relay.writeSync(0);
+                    turnRelayOn(preheatPower * 1000);
+                    tempHistory = [];
+                    tempHistory.push({ x: i, y: temperatureSnapshot });
                 }
             } else {
-                ctr.setTarget(temperatureTarget);
-                var correction = ctr.update(temperatureSnapshot);
-                console.log(correction);
-                turnRelayOn(correction);
+                temperatureTarget = getTemperatureAtPoint(i + lookAhead);
+                if (onOffMode) {
+                    if (temperatureTarget > temperatureSnapshot) {
+                        relay.writeSync(1);
+                    } else {
+                        relay.writeSync(0);
+                    }
+                } else {
+                    ctr.setTarget(temperatureTarget);
+                    var correction = ctr.update(temperatureSnapshot);
+                    console.log(correction);
+                    turnRelayOn(correction);
+                }
+                if (i > datapoints[datapoints.length - 1].x + 30) {
+                    module.stop(true);
+                }
+                tempHistory.push({ x: i, y: temperatureSnapshot });
+                percentDone = Math.floor((i / datapoints[datapoints.length - 1].x) * 100);
+                if (percentDone > 100) {
+                    percentDone = 100;
+                }
+                i++;
             }
-            if (i > datapoints[datapoints.length - 1].x + 30) {
-                module.stop();
-            }
-            tempHistory.push({x: i, y: temperatureSnapshot});
-            percentDone = Math.floor((i / datapoints[datapoints.length - 1].x) * 100);
-            if (percentDone > 100) {
-                percentDone = 100;
-            }
-            i++;
         }, 1000);
         //io emit "user can open door"
         return 0;
     }
     
     
-    module.stop = function() {
+    module.stop = function(shouldDelayFan) {
         clearInterval(interval);
         relay.writeSync(0);
-        fanOff();
-        currentAction = "Ready";
+        if (shouldDelayFan) {
+            fanOff(hardwareSettings.getFanTimeout() * 1000);
+        } else {
+            fanOff(0);
+        }
+        
     }
     
     module.getStatus = function() {
@@ -130,14 +152,10 @@ module.exports = function(socketio, tempSensor) {
     }
     
     module.loadProfile = function (profileName) {
-        module.stop();
+        module.stop(false);
         currentProfile = profile.getProfile(profileName);
         tempHistory = [];
         percentDone = 0;
-    }
-
-    module.savePIDSettings = function (settings) {
-        
     }
     
     //if less than 20ms, then don't turn on at all
@@ -155,11 +173,23 @@ module.exports = function(socketio, tempSensor) {
     }
 
     function fanOn() {
+        if (fanTimeout !== null) {
+            clearTimeout(fanTimeout);
+        }
         fan.writeSync(1);
     }
 
-    function fanOff() {
-        fan.writeSync(0);
+    function fanOff(afterTimeout) {
+        if (afterTimeout === 0) {
+            fan.writeSync(0);
+            currentAction = "Ready";
+        } else {
+            currentAction = "Cooling";
+            fanTimeout = setTimeout(function () {
+                fan.writeSync(0);
+                currentAction = "Ready";
+            }, afterTimeout);
+        }
     }
 
     //load a profile when initalizing 
@@ -172,7 +202,7 @@ module.exports = function(socketio, tempSensor) {
     });
 
     process.on('exit', (code) => {
-        module.stop();
+        module.stop(false);
     });
 
     process.on('SIGINT', () => {

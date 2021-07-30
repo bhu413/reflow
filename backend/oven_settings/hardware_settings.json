@@ -2,5 +2,6 @@
    "heat_rate": 1.2,
    "cool_rate": 0.3,
    "relay_pin": 16,
-   "fan_pin": 25
+   "fan_pin": 25,
+   "fan_timeout": 10
 }
