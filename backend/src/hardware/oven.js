@@ -2,21 +2,11 @@ module.exports = function(socketio, tempSensor) {
     
     const Controller = require('node-pid-controller');
     const profile = require('../models/profile');
+    const hardwareSettings = require('../models/hardware_settings');
+    const pidSettings = require('../models/pid_settings');
     const Gpio = require('onoff').Gpio;
-    const relay = new Gpio(27, 'out');
-    const fan = new Gpio(22, 'out');
-
-    //bypasses controller, just does on or off based on temp
-    var onOffMode = true;
-
-    //how many seconds to look ahead when figuring out target temp
-    var lookAhead = 0;
-
-    //pid variables
-    var proportional = 0.25;
-    var integral = 0.00;
-    var derivative = 0.00;
-    var dt = 1;
+    var relay;
+    var fan;
 
     //list of things to export
     var module = {};
@@ -65,7 +55,19 @@ module.exports = function(socketio, tempSensor) {
         var datapoints = currentProfile.datapoints;
         tempHistory = [];
 
-        //need to implement status update for heating, reflow, cooling
+        //pid variables
+        var proportional = pidSettings.getP();
+        var integral = pidSettings.getI();
+        var derivative = pidSettings.getD();
+        var dt = pidSettings.getDeltaT();
+        var lookAhead = pidSettings.getLookAhead();
+        var onOffMode = pidSettings.getOnoff();
+
+        //set gpio
+        relay = new Gpio(hardwareSettings.getRelayPin(), 'out');
+        fan = new Gpio(hardwareSettings.getFanPin(), 'out');
+
+        //need to implement status update for preheat, cooling
         currentAction = "Running";
     
         fanOn();
@@ -89,7 +91,7 @@ module.exports = function(socketio, tempSensor) {
                 ctr.setTarget(temperatureTarget);
                 var correction = ctr.update(temperatureSnapshot);
                 console.log(correction);
-                turnRelayOn(correction * 100);
+                turnRelayOn(correction);
             }
             if (i > datapoints[datapoints.length - 1].x + 30) {
                 module.stop();
@@ -130,21 +132,25 @@ module.exports = function(socketio, tempSensor) {
     module.loadProfile = function (profileName) {
         module.stop();
         currentProfile = profile.getProfile(profileName);
+        tempHistory = [];
+        percentDone = 0;
     }
 
     module.savePIDSettings = function (settings) {
         
     }
     
-    //if less than 50ms, then don't turn on at all
+    //if less than 20ms, then don't turn on at all
     function turnRelayOn(duration) {
-        if (duration >= 900) {
+        if (duration >= 980) {
             relay.writeSync(1);
-        } else if (duration > 50) {
+        } else if (duration < 20) {
+            relay.writeSync(0);
+        } else {
             relay.writeSync(1);
-            setTimeout(function() {
+            setTimeout(function () {
                 relay.writeSync(0);
-            }, duration );
+            }, duration);
         }
     }
 
@@ -157,7 +163,7 @@ module.exports = function(socketio, tempSensor) {
     }
 
     //load a profile when initalizing 
-    module.loadProfile('smd291ax');
+    module.loadProfile('');
 
     //if anything goes wrong, stop everything in the oven
     process.on('uncaughtException', (error) => {

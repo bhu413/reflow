@@ -2,18 +2,8 @@ module.exports = function(socketio, tempSensor) {
     
     const Controller = require('node-pid-controller');
     const profile = require('../models/profile');
-
-    //bypasses controller, just does on or off based on temp
-    var onOffMode = true;
-
-    //how many seconds to look ahead when figuring out target temp
-    var lookAhead = 0;
-
-    //pid variables
-    var proportional = 0.25;
-    var integral = 0.00;
-    var derivative = 0.00;
-    var dt = 1;
+    const pidSettings = require('../models/pid_settings');
+    const hardwareSettings = require('../models/hardware_settings');
 
     //list of things to export
     var module = {};
@@ -63,8 +53,18 @@ module.exports = function(socketio, tempSensor) {
         
         var datapoints = currentProfile.datapoints;
         tempHistory = [];
+
+        //pid variables
+        var proportional = pidSettings.getP();
+        var integral = pidSettings.getI();
+        var derivative = pidSettings.getD();
+        var dt = pidSettings.getDeltaT();
+        var lookAhead = pidSettings.getLookAhead();
+        var onOffMode = pidSettings.getOnoff();
+
+        console.log(proportional + " " + integral + " " + derivative + " " + lookAhead);
         
-        //need to implement status update for heating, reflow, cooling
+        //need to implement status update for preheat, cooling
         currentAction = "Running";
     
         fanOn();
@@ -88,7 +88,7 @@ module.exports = function(socketio, tempSensor) {
                 ctr.setTarget(temperatureTarget);
                 var correction = ctr.update(temperatureSnapshot);
                 console.log(correction);
-                turnRelayOn(correction * 100);
+                turnRelayOn(correction);
             }
             if (i > datapoints[datapoints.length - 1].x + 30) {
                 module.stop();
@@ -130,30 +130,34 @@ module.exports = function(socketio, tempSensor) {
     module.loadProfile = function (profileName) {
         module.stop();
         currentProfile = profile.getProfile(profileName);
+        tempHistory = [];
+        percentDone = 0;
     }
     
-    //if less than 50ms, then don't turn on at all
+    //if less than 20ms, then don't turn on at all
     function turnRelayOn(duration) {
-        if (duration >= 900) {
-            console.log("relay on");
-        } else if (duration > 50) {
-            console.log("relay on");
-            setTimeout(function() {
-                console.log("relay off");
-            }, duration );
+        if (duration >= 980) {
+            console.log("relay on (gpio" + hardwareSettings.getRelayPin() + ")");
+        } else if (duration < 20) {
+            console.log("relay off (gpio" + hardwareSettings.getRelayPin() + ")");
+        } else {
+            console.log("relay on (gpio" + hardwareSettings.getRelayPin() + ")");
+            setTimeout(function () {
+                console.log("relay off (gpio" + hardwareSettings.getRelayPin() + ")");
+            }, duration);
         }
     }
 
     function fanOn() {
-        console.log("fan on");
+        console.log("fan on (gpio" + hardwareSettings.getFanPin() + ")");
     }
 
     function fanOff() {
-        console.log("fan off");
+        console.log("fan off (gpio" + hardwareSettings.getFanPin() + ")");
     }
     
     //load a profile when initalizing 
-    module.loadProfile('smd291ax');
+    module.loadProfile('');
 
     //if anything goes wrong, stop everything in the oven
     process.on('uncaughtException', (error) => {

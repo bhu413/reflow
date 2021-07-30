@@ -12,9 +12,9 @@ import SettingsIcon from '@material-ui/icons/Settings';
 import { Link } from "react-router-dom";
 import axios from 'axios';
 import StopIcon from '@material-ui/icons/Stop';
-
-import { ListItem, Drawer, ListItemText, ListItemIcon, Divider } from '@material-ui/core';
-
+import QRCode from "qrcode.react";
+import CloseIcon from '@material-ui/icons/Close';
+import { ListItem, Drawer, ListItemText, ListItemIcon, Divider, Dialog, DialogTitle, DialogContent } from '@material-ui/core';
 import { LinearProgress, Grid } from '@material-ui/core';
 
 class StatusBar extends Component {
@@ -24,13 +24,17 @@ class StatusBar extends Component {
         this.componentWillUnmount = this.componentWillUnmount.bind(this);
         this.drawerChange = this.drawerChange.bind(this);
         this.stop = this.stop.bind(this);
-        this.state = { drawer: false, percentage: 0, temperature: 0, status: "Ready", address: ":", currentProfile: "" };
+        this.qrClicked = this.qrClicked.bind(this);
+        this.qrClosed = this.qrClosed.bind(this);
+        this.state = { drawer: false, qrDialog: false, percentage: 0, temperature: 0, status: "Ready", address: ":", currentProfile: "" };
     }
 
     stop() {
         axios.post('/api/stop', { reason: "test" })
             .then(res => {
-                //console.log(res);
+                if (res.data.status === 200) {
+                    this.setState({ status: "Ready" });
+                }
             });
     }
 
@@ -62,21 +66,50 @@ class StatusBar extends Component {
         socket.off("status_update");
     }
 
+    qrClicked() {
+        this.setState({ qrDialog: true });
+    }
+
+    qrClosed() {
+        this.setState({ qrDialog: false });
+    }
+
     render() {
         return (
             <>
+                <Dialog onClose={this.qrClosed} open={this.state.qrDialog} fullWidth={false} maxWidth={"sm"}>
+                    <DialogTitle>
+                        <Grid container justifyContent='center'>
+                            <Grid item>
+                                <Typography variant='h5'>
+                                    http://{this.state.address}:3001
+                                </Typography>
+                            </Grid>
+                        </Grid>
+                    </DialogTitle>
+                    <DialogContent>
+                        <Grid container alignItems='center' direction='column'>
+                            <Grid item>
+                                <QRCode value={"http://" + this.state.address + ":3001"} size={200} />
+                            </Grid>
+                            <Grid item>
+                                <IconButton aria-label="close" onClick={this.qrClosed}>
+                                    <CloseIcon />
+                                </IconButton>
+                            </Grid>
+                        </Grid>
+                    </DialogContent>
+                </Dialog>
                 <AppBar position="static">
                     <Toolbar>
                         <IconButton edge="start" color="inherit" aria-label="menu" onClick={this.drawerChange}>
                             <MenuIcon />
                         </IconButton>
-                        <Grid container spacing={5}>
+                        <Grid container spacing={5} style={{paddingLeft: 20}}>
                             <Grid item>
-                                <Typography  >
-                                    Address: {this.state.address}
-                                </Typography>
+                                <QRCode style={{ cursor: 'pointer' }} onClick={this.qrClicked} value={"http://" + this.state.address + ":3001"} size={25} />
                             </Grid>
-                            <Grid item>
+                            <Grid item xs={2}>
                                 <Typography >
                                     {this.state.temperature} °C
                                 </Typography>

@@ -2,7 +2,6 @@ import { React, Component } from 'react';
 import Profile from '../components/Profile';
 import { Button, Grid, Dialog, DialogTitle, DialogContent, DialogActions, IconButton, Container } from '@material-ui/core';
 import { DataGrid } from '@material-ui/data-grid'
-import './profileList.css';
 import { Link, withRouter } from "react-router-dom";
 import axios from 'axios';
 import CancelIcon from '@material-ui/icons/Cancel';
@@ -29,8 +28,7 @@ class ProfileList extends Component {
     this.handleForceDialogClose = this.handleForceDialogClose.bind(this);
   }
   MyDataGrid = styled(DataGrid)({
-    color: 'white',
-    height: 550,
+    backgroundColor: 'white'
   });
 
   SelectButton = styled(Button)({
@@ -133,7 +131,7 @@ class ProfileList extends Component {
     return (
       <>
         <StatusBar />
-        <Dialog onClose={this.handleDialogClose} open={this.state.dialog} fullWidth={true} maxWidth={"sm"}>
+        <Dialog onClose={this.handleDialogClose} open={this.state.dialog} fullWidth={true}>
           <DialogTitle>
             {this.state.activeItem.name}
             <IconButton aria-label="close" onClick={this.handleDialogClose}>
@@ -141,7 +139,9 @@ class ProfileList extends Component {
             </IconButton>
           </DialogTitle>
           <DialogContent>
-            <Profile draggable={false} profile={this.state.activeItem} historicTemps={[]} />
+            <div style={{width: '97%'}}>
+              <Profile draggable={false} profile={this.state.activeItem} historicTemps={[]} />
+            </div>
           </DialogContent>
           <DialogActions>
             <Button startIcon={<SaveAltIcon />} variant="contained" color="primary" onClick={this.downloadProfile}>Download</Button>
@@ -169,9 +169,10 @@ class ProfileList extends Component {
 
         <Container maxWidth={false}>
           <Grid container direction={"row"} align={"center"} justifyContent={"center"} spacing={2}>
-            <Grid item xs={12} md={8} lg={6}>
+            <Grid item xs={12} md={8} lg={6} style={{paddingTop: '20px'}}>
               <this.MyDataGrid
                 rows={this.state.profiles}
+                rowHeight={45}
                 columns={this.columns}
                 pageSize={5}
                 checkboxSelection={false}

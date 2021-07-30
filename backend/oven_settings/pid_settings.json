@@ -1,7 +1,9 @@
 {
-    "onoff_mode": true,
-    "lookahead": 0,
-    "p": 30,
-    "i": 1,
-    "d": 1
+   "onoff_mode": false,
+   "p": 4,
+   "i": 5,
+   "d": 6,
+   "delta_t": 1,
+   "look_ahead": 7,
+   "preheat": true
 }

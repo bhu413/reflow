@@ -5,6 +5,9 @@ module.exports = function (app, express, socketio) {
     const os = require("os");
     //https://stackoverflow.com/questions/3653065/get-local-ip-address-in-node-js
     const nets = os.networkInterfaces();
+    const networkSettings = require("../models/network_settings");
+    const pidSettings = require("../models/pid_settings");
+    const hardwareSettings = require("../models/hardware_settings");
     const addressResults = Object.create({}); // Or just '{}', an empty object
 
     for (const name of Object.keys(nets)) {
@@ -19,9 +22,6 @@ module.exports = function (app, express, socketio) {
         }
     }
 
-
-    //const bodyParser = require("body-parser");
-    const { request } = require('express');
     const profile = require('../models/profile');
     var oven;
     if (process.platform !== "linux") {
@@ -84,6 +84,34 @@ module.exports = function (app, express, socketio) {
         res.json(addressResults);
     });
 
+    //NEED TO IMPLEMENT
+    app.get("/api/settings/network", (req, res) => {
+        res.json(networkSettings.getNetworkSettings());
+    });
+
+    app.post("/api/settings/network", (req, res) => {
+        networkSettings.saveNetworkSettings(req.body);
+        res.json({ status: 200, message: "Saved successfully" });
+    });
+
+    app.get("/api/settings/pid", (req, res) => {
+        res.json(pidSettings.getPidSettings());
+    });
+
+    app.post("/api/settings/pid", (req, res) => {
+        pidSettings.savePidSettings(req.body);
+        res.json({ status: 200, message: "Saved successfully" });
+    });
+
+    app.get("/api/settings/hardware", (req, res) => {
+        res.json(hardwareSettings.getHardwareSettings());
+    });
+
+    app.post("/api/settings/hardware", (req, res) => {
+        hardwareSettings.saveHardwareSettings(req.body);
+        res.json({ status: 200, message: "Saved successfully" });
+    });
+
     //statically serve files from folder
     app.use('/api/reflow_profiles', express.static('reflow_profiles'));
 
@@ -110,25 +138,23 @@ module.exports = function (app, express, socketio) {
     });
 
     app.post("/api/run", (req, res) => {
-        var profileName = req.body.profile_name;
         if (oven.getStatus() == "Running") {
             if (req.body.override) {
-                oven.startProfile(profile.getProfile(profileName));
-                res.json({ message: "running profile" });
+                oven.startProfile();
+                res.json({ status: 200, message: "running profile" });
             } else {
-                res.status(409).json({message: "already running"});
+                res.json({status: 409, message: "already running"});
             }
         } else {
-            oven.loadProfile(profileName);
             oven.startProfile();
-            res.json({ message: "running profile" });
+            res.json({ status: 200, message: "running profile" });
         }
     });
 
     app.post("/api/stop", (req, res) => {
         var reason = req.body.reason;
         oven.stop();
-        res.json({ message: "stopped" });
+        res.json({ status: 200, message: "stopped" });
     });
 
     app.use("*", express.static("../frontend/build"));
