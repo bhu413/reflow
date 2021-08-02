@@ -17,10 +17,10 @@ import axios from 'axios';
 class HardwareSettings extends Component {
     constructor() {
         super();
-        this.state = { relayPin: 0, fanPin: 0, inputChanged: false, relayError: false, fanError: false, fanTimeout: 0 };
+        this.state = { relayPin: 5, fanPin: 6, inputChanged: false, relayError: false, fanError: false, fanTurnoffTemp: 0 };
         this.handleRelayChange = this.handleRelayChange.bind(this);
         this.handleFanChange = this.handleFanChange.bind(this);
-        this.handleFanTimeoutChange = this.handleFanTimeoutChange.bind(this);
+        this.handleFanTurnoffChange = this.handleFanTurnoffChange.bind(this);
         this.errorClose = this.errorClose.bind(this);
         this.save = this.save.bind(this);
     }
@@ -29,7 +29,7 @@ class HardwareSettings extends Component {
         fetch('/api/settings/hardware')
             .then(response => response.json())
             .then(result => {
-                this.setState({ relayPin: result.relay_pin, fanPin: result.fan_pin, fanTimeout: result.fan_timeout });
+                this.setState({ relayPin: result.relay_pin, fanPin: result.fan_pin, fanTurnoffTemp: result.fan_turnoff_temp });
             });
     }
 
@@ -49,9 +49,9 @@ class HardwareSettings extends Component {
         }
     }
 
-    handleFanTimeoutChange(e) {
+    handleFanTurnoffChange(e) {
         if (e.target.value >= 0) {
-            this.setState({ fanTimeout: e.target.value, inputChanged: true });
+            this.setState({ fanTurnoffTemp: e.target.value, inputChanged: true });
         }
     }
 
@@ -63,7 +63,7 @@ class HardwareSettings extends Component {
         var newSettings = {};
         newSettings.relay_pin = this.state.relayPin;
         newSettings.fan_pin = this.state.fanPin;
-        newSettings.fan_timeout = this.state.fanTimeout;
+        newSettings.fan_turnoff_temp = this.state.fanTurnoffTemp;
         axios.post('/api/settings/hardware', newSettings)
             .then(res => {
                 if (res.data.status === 200) {
@@ -132,7 +132,7 @@ class HardwareSettings extends Component {
                             </FormControl>
                         </Grid>
                         <Grid item>
-                            <TextField variant="outlined" type='number' label='Fan off delay (seconds)' value={this.state.fanTimeout} onChange={this.handleFanTimeoutChange} />
+                            <TextField variant="outlined" type='number' label='Fan off temperature (°C)' value={this.state.fanTurnoffTemp} onChange={this.handleFanTurnoffChange} />
                         </Grid>
                         <Grid container justifyContent='flex-end' spacing={3}>
                             <Grid item>

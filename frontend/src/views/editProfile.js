@@ -20,7 +20,7 @@ import ArrowDownwardIcon from '@material-ui/icons/ArrowDownward';
 import ArrowBackIcon from '@material-ui/icons/ArrowBack';
 import ArrowForwardIcon from '@material-ui/icons/ArrowForward';
 import Paper from '@material-ui/core/Paper';
-import { styled } from '@material-ui/core/styles';
+import { withStyles } from '@material-ui/core/styles';
 
 
 class EditProfile extends Component {
@@ -62,10 +62,14 @@ class EditProfile extends Component {
     this.subtractNode = this.subtractNode.bind(this);
   }
 
-  SaveButton = styled(Button)({
-    background: '#3dd900',
-    '&:hover': '#3dd900'
-  });
+  SaveButton = withStyles({
+    root: {
+      backgroundColor: '#00ba16',
+      '&:hover': {
+        backgroundColor: '#009612'
+      }
+    }
+  })(Button);
 
   //shift layout doesn't do anything. just there for reference
   layout = {
@@ -199,7 +203,9 @@ class EditProfile extends Component {
 
   drag(e, datasetIndex, index, value) {
     //enabling this makes things laggy. I think its good enough without it
-    //this.setState({ currentX: value.x, currentY: value.y });
+    var tempProfile = this.state.newProfile;
+    tempProfile.datapoints[index] = value;
+    this.setState({ currentX: value.x, currentY: value.y, newProfile: tempProfile });
   }
 
   dragEnd(e, datasetIndex, index, value) {
@@ -242,7 +248,6 @@ class EditProfile extends Component {
   }
 
   forceLoadClicked() {
-
     axios.post('/api/reflow_profiles/load', { profile_name: this.state.newProfile.name, force_load: true })
       .then(res => {
         //check if response is ok or if validation failed
@@ -266,7 +271,6 @@ class EditProfile extends Component {
     this.setState({ newProfile: tempProfile });
     axios.post('/api/reflow_profiles/save', this.state.newProfile)
       .then(res => {
-        //console.log(res);
         this.setState({ loadDialog: true });
       });
 
@@ -281,6 +285,10 @@ class EditProfile extends Component {
       var tempProfile = this.state.newProfile;
       tempProfile.name = tempProfile.name.substring(0, tempProfile.name.length - 1);
       this.setState({ newProfile: tempProfile });
+    } else if (input === '{space}') {
+      var tempProfile = this.state.newProfile;
+      tempProfile.name = tempProfile.name + " ";
+      this.setState({ newProfile: tempProfile });
     } else {
       var tempProfile = this.state.newProfile;
       tempProfile.name = tempProfile.name + input;
@@ -290,13 +298,11 @@ class EditProfile extends Component {
   }
 
   cancelEnterName() {
-    var tempProfile = this.state.profile;
-    tempProfile.name = this.props.location.state.profile.name;
-    this.setState({ enterNameDialog: false, newProfile: tempProfile });
+    this.setState({ enterNameDialog: false });
   }
 
   clearName() {
-    var tempProfile = this.state.profile;
+    var tempProfile = this.state.newProfile;
     tempProfile.name = "";
     this.setState({ newProfile: tempProfile });
   }
@@ -305,7 +311,6 @@ class EditProfile extends Component {
     return (
       <>
         <StatusBar />
-
         <Dialog open={this.state.loadDialog} onClose={this.cancelClicked}>
           <DialogTitle>
             Profile saved
@@ -314,10 +319,10 @@ class EditProfile extends Component {
             Would you like to load the profile now?
           </DialogContent>
           <DialogActions>
-            <Button onClick={this.cancelClicked} color="primary">
+            <Button onClick={this.cancelClicked} color="primary" variant='outlined'>
               Don't Load
             </Button>
-            <Button onClick={this.loadClicked} color="primary" autoFocus>
+            <Button onClick={this.loadClicked} color="primary" variant='outlined' autoFocus>
               Load
             </Button>
           </DialogActions>
@@ -331,16 +336,16 @@ class EditProfile extends Component {
             Stop oven and load profile?
           </DialogContent>
           <DialogActions>
-            <Button onClick={this.cancelClicked} color="primary">
+            <Button onClick={this.cancelClicked} color="primary" variant='outlined'>
               Cancel
             </Button>
-            <Button onClick={this.forceLoadClicked} color="primary" autoFocus>
+            <Button onClick={this.forceLoadClicked} color="primary" variant='outlined' autoFocus>
               Force Load
             </Button>
           </DialogActions>
         </Dialog>
 
-        <Dialog open={this.state.enterNameDialog} maxWidth={'lg'} fullWidth={true} onClose={this.cancelClicked}>
+        <Dialog open={this.state.enterNameDialog} maxWidth={'md'} fullWidth={false} onClose={this.cancelClicked}>
           <DialogTitle>
             Name your profile:
           </DialogTitle>
@@ -354,39 +359,54 @@ class EditProfile extends Component {
             />
           </DialogContent>
           <DialogActions>
-            <Button onClick={this.cancelEnterName} color="primary">
+            <Button onClick={this.cancelEnterName} color="primary" variant='outlined'>
               Cancel
             </Button>
-            <Button onClick={this.saveProfile} color="primary" autoFocus>
+            <Button onClick={this.saveProfile} color="primary" variant='contained' autoFocus>
               OK
             </Button>
           </DialogActions>
-          <Keyboard theme={"hg-theme-default"} onKeyPress={this.keyboardChange} layout={this.layout} layoutName={'default'} />
+          {/*<Keyboard
+            //theme={"hg-theme-default hg-layout-default myTheme"}
+            onKeyPress={this.keyboardChange}
+            layout={this.layout}
+            layoutName={'default'}
+            buttonTheme={[
+              {
+                class: "hg-red",
+                buttons: "Q W E R T Y q w e r t y"
+              },
+              {
+                class: "hg-highlight",
+                buttons: "Q q"
+              }
+            ]}
+          />*/}
         </Dialog>
 
         <Container maxWidth={false}>
           <Grid container >
-            <Grid item sm={2}>
-              <Grid container spacing={1} direction="column" style={{ paddingTop: '20px' }}>
-                <Grid item>
-                  <Typography variant='subtitle1' style={{ color: 'white' }}>Current Point: {this.state.currentPoint + 1}</Typography>
+            <Grid item sm={2} lg={2}>
+              <Grid container spacing={1} direction="column"  style={{ paddingTop: '20px' }} >
+                <Grid item align='center'>
+                  <Typography variant='subtitle1'>Current Point: {this.state.currentPoint + 1}</Typography>
                 </Grid>
 
                 <Grid item>
-                  <Paper style={{ background: '#454647' }}>
-                    <Grid item>
-                      <Typography variant='subtitle1' style={{ color: 'white' }}>Edit Point</Typography>
+                  <Paper>
+                    <Grid item align='center'>
+                      <Typography variant='subtitle1'>Edit Point</Typography>
                     </Grid>
-                    <Grid item>
+                    <Grid item align='center'>
                       <IconButton color='primary' size='small' onClick={this.addY}><ArrowUpwardIcon /></IconButton>
                     </Grid>
                     <Grid item>
-                      <Grid container justifyContent='space-evenly'>
+                      <Grid container justifyContent='space-between' wrap='nowrap'>
                         <Grid item>
                           <IconButton color='primary' size='small' onClick={this.subtractX}><ArrowBackIcon /></IconButton>
                         </Grid>
-                        <Grid item xs>
-                          <Typography variant='subtitle2' style={{ color: 'white', paddingTop: 5, fontSize: 12 }}>({this.state.currentX}, {this.state.currentY})</Typography>
+                        <Grid item align='center' style={{minWidth: 90}}>
+                          <Typography variant='h6'  noWrap={true}>{this.state.currentX}, {this.state.currentY}</Typography>
                         </Grid>
                         <Grid item>
                           <IconButton color='primary' size='small' onClick={this.addX}><ArrowForwardIcon /></IconButton>
@@ -394,23 +414,23 @@ class EditProfile extends Component {
                       </Grid>
                     </Grid>
                     
-                    <Grid item>
+                    <Grid item align='center'>
                       <IconButton color='primary' size='small' onClick={this.subtractY}><ArrowDownwardIcon /></IconButton>
                     </Grid>
                   </Paper>
                 </Grid>
 
                 <Grid item>
-                  <Paper style={{ background: '#454647' }}>
-                    <Grid item>
-                      <Typography variant='subtitle1' style={{ color: 'white' }}>Nodes</Typography>
+                  <Paper>
+                    <Grid item align='center'>
+                      <Typography variant='subtitle1'>Nodes</Typography>
                     </Grid>
-                    <Grid container spacing={1} justifyContent='center'>
+                    <Grid container spacing={1} justifyContent='space-between'>
                       <Grid item>
                         <IconButton color='primary' size='small' onClick={this.subtractNode}><RemoveIcon /></IconButton>
                       </Grid>
-                      <Grid item xs>
-                        <Typography variant='h6' style={{ color: 'white' }}>{this.state.maxNodes}</Typography>
+                      <Grid item align='center'>
+                        <Typography variant='h6' >{this.state.maxNodes}</Typography>
                       </Grid>
                       <Grid item>
                         <IconButton color='primary' size='small' onClick={this.addNode}><AddIcon /></IconButton>
@@ -420,16 +440,16 @@ class EditProfile extends Component {
                 </Grid>
 
                 <Grid item>
-                  <Paper style={{ background: '#454647' }}>
-                    <Grid item>
-                      <Typography variant='subtitle1' style={{ color: 'white' }}>Max Time</Typography>
+                  <Paper>
+                    <Grid item align='center'>
+                      <Typography variant='subtitle1' >Max Time</Typography>
                     </Grid>
-                    <Grid container spacing={1} justifyContent='center'>
+                    <Grid container spacing={1} justifyContent='space-between'>
                       <Grid item>
                         <IconButton color='primary' size='small' onClick={this.subtractTime}><RemoveIcon /></IconButton>
                       </Grid>
-                      <Grid item xs>
-                        <Typography variant='h6' style={{ color: 'white' }}>{this.state.maxTime}</Typography>
+                      <Grid item align='center'>
+                        <Typography variant='h6' >{this.state.maxTime}</Typography>
                       </Grid>
                       <Grid item>
                         <IconButton color='primary' size='small' onClick={this.addTime}><AddIcon /></IconButton>
@@ -441,7 +461,7 @@ class EditProfile extends Component {
             </Grid>
 
             <Grid item sm={10}>
-              <div style={{ paddingTop: "20px", width: '96%', margin: '0 0 0 auto' }}>
+              <div style={{ paddingTop: "20px", width: '94%', marginLeft: 'auto' }}>
                 <Profile
                   draggable={true}
                   profile={this.state.newProfile}
@@ -457,7 +477,12 @@ class EditProfile extends Component {
         </Container>
         
         <Container maxWidth={false}>
-          <Grid container spacing={3} alignItems="center" justify="flex-end" style={{ paddingTop: '35px' }}>
+          <Grid container spacing={3} alignItems="center" justify="flex-end" style={{ paddingTop: '20px' }}>
+            <Grid item xs={5} md={6} lg={7} xl={8}>
+              <Typography variant='h5'>
+                {this.state.newProfile.name}
+              </Typography>
+            </Grid>
             <Grid item>
               <Button onClick={this.goBack} startIcon={<CancelIcon />} variant="contained" color="primary">Cancel</Button>
             </Grid>

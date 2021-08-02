@@ -8,7 +8,7 @@ module.exports = function(socketio) {
     }
     
     function updateTemp() {
-        currentTemp = Math.floor(Math.random() * (300 - 30) + 30);
+        currentTemp = Math.floor(Math.random() * (200 - 30) + 30);
     }
 
     const interval = setInterval(updateTemp, 1000);
@@ -21,6 +21,3 @@ module.exports = function(socketio) {
 
     return module;
 }
-
-
-

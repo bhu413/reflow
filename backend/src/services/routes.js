@@ -1,26 +1,10 @@
-
-
 module.exports = function (app, express, socketio) {
 
-    const os = require("os");
-    //https://stackoverflow.com/questions/3653065/get-local-ip-address-in-node-js
-    const nets = os.networkInterfaces();
+    const ip = require("ip");
     const networkSettings = require("../models/network_settings");
     const pidSettings = require("../models/pid_settings");
     const hardwareSettings = require("../models/hardware_settings");
-    const addressResults = Object.create({}); // Or just '{}', an empty object
-
-    for (const name of Object.keys(nets)) {
-        for (const net of nets[name]) {
-            // Skip over non-IPv4 and internal (i.e. 127.0.0.1) addresses
-            if (net.family === 'IPv4' && !net.internal) {
-                if (!addressResults[name]) {
-                    addressResults[name] = [];
-                }
-                addressResults[name].push(net.address);
-            }
-        }
-    }
+    const appearanceSettings = require("../models/appearance_settings");
 
     const profile = require('../models/profile');
     var oven;
@@ -50,16 +34,23 @@ module.exports = function (app, express, socketio) {
     });
 
     app.get("/api/status", (req, res) => {
-        res.json({status: oven.getStatus()});
+        res.json({ status: oven.getStatus(), address: ip.address() + ":" + networkSettings.getProperty('port')});
     });
 
     app.get("/api/current_profile", (req, res) => {
         res.json({current_profile: oven.getCurrentProfile()});
     });
 
+    app.post("/api/send_message", (req, res) => {
+        socketio.emit("server_message", { message: "[" + req.headers['x-forwarded-for'] + "] " + req.body.message, severity: 'info'});
+        res.json({ status: 200, message: "message sent" });
+    });
+
+
     app.post("/api/reflow_profiles/load", (req, res) => {
         if (oven.getStatus().status !== "Ready") {
             if (req.body.force_load) {
+                oven.stop(true);
                 oven.loadProfile(req.body.profile_name);
                 res.json({ status: 200, message: "loading profile" });
             } else {
@@ -81,34 +72,43 @@ module.exports = function (app, express, socketio) {
     });
 
     app.get("/api/server_address", (req, res) => {
-        res.json(addressResults);
+        res.json(ip.address() + ":" + networkSettings.getProperty('port'));
     });
 
     //NEED TO IMPLEMENT
     app.get("/api/settings/network", (req, res) => {
-        res.json(networkSettings.getNetworkSettings());
+        res.json(networkSettings.getAllSettings());
     });
 
     app.post("/api/settings/network", (req, res) => {
-        networkSettings.saveNetworkSettings(req.body);
+        networkSettings.saveSettings(req.body);
         res.json({ status: 200, message: "Saved successfully" });
     });
 
     app.get("/api/settings/pid", (req, res) => {
-        res.json(pidSettings.getPidSettings());
+        res.json(pidSettings.getAllSettings());
     });
 
     app.post("/api/settings/pid", (req, res) => {
-        pidSettings.savePidSettings(req.body);
+        pidSettings.saveSettings(req.body);
         res.json({ status: 200, message: "Saved successfully" });
     });
 
     app.get("/api/settings/hardware", (req, res) => {
-        res.json(hardwareSettings.getHardwareSettings());
+        res.json(hardwareSettings.getAllSettings());
     });
 
     app.post("/api/settings/hardware", (req, res) => {
-        hardwareSettings.saveHardwareSettings(req.body);
+        hardwareSettings.saveSettings(req.body);
+        res.json({ status: 200, message: "Saved successfully" });
+    });
+
+    app.get("/api/settings/appearance", (req, res) => {
+        res.json(appearanceSettings.getAllSettings());
+    });
+
+    app.post("/api/settings/appearance", (req, res) => {
+        appearanceSettings.saveSettings(req.body);
         res.json({ status: 200, message: "Saved successfully" });
     });
 
@@ -117,29 +117,13 @@ module.exports = function (app, express, socketio) {
 
     app.post("/api/reflow_profiles/save", (req, res) => {
         var validCode = profile.saveProfile(req.body);
-        if (validCode == 0) {
-            res.json({ status: 200, message: "Saved successfully" });
-        } else if (validCode == 1) {
-            res.json({ status: 409, message: "Error: bad data" });
-        } else if (validCode == 2) {
-            res.json({ status: 409, message: "Error: bad file" });
-        }
-    });
-
-    app.post("/api/settings/pid", (req, res) => {
-        var validCode = oven.savePIDSettings(req.body);
-        if (validCode == 0) {
-            res.json({ status: 200, message: "Saved successfully" });
-        } else if (validCode == 1) {
-            res.json({ status: 409, message: "Error: bad data" });
-        } else if (validCode == 2) {
-            res.json({ status: 409, message: "Error: bad file" });
-        }
+        res.json({ status: validCode.status, message: validCode.message });
     });
 
     app.post("/api/run", (req, res) => {
-        if (oven.getStatus() === "Running") {
+        if (oven.getStatus().status !== "Ready") {
             if (req.body.override) {
+                oven.stop()
                 oven.startProfile();
                 res.json({ status: 200, message: "running profile" });
             } else {
@@ -152,7 +136,7 @@ module.exports = function (app, express, socketio) {
     });
 
     app.post("/api/stop", (req, res) => {
-        var reason = req.body.reason;
+        socketio.emit("server_message", {severity: 'warning', message: 'Proflie stopped by user'});
         oven.stop(true);
         res.json({ status: 200, message: "stopped" });
     });

@@ -14,12 +14,13 @@ function validate(profile) {
     //check for invalid file characters
     //must have at least 2 data points
     //datapoints must be in order
-    return 0;
+    return { status: 200, message: 'profile is valid' };
+    return { status: 406, message: 'profie not valid because...' };
 }
 
 module.exports.saveProfile = function(profile) {
     var validCode = validate(profile);
-    if (validCode != 0) {
+    if (validCode.status != 200) {
         return validCode;
     }
     

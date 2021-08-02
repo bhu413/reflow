@@ -1,9 +1,9 @@
 // server/index.js
 
-const os = require("os");
+const ip = require('ip');
 
 const networkSettings = require('./src/models/network_settings');
-const PORT = networkSettings.getPort();
+const PORT = networkSettings.getProperty('port');
 
 const express = require("express");
 const app = express();
@@ -24,7 +24,6 @@ io.on("connection", (socket) => {
 
 require("./src/services/routes")(app, express, io);
 //require("./src/services/test-routes")(app);
-
 
 
 

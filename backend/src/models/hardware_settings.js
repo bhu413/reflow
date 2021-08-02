@@ -3,32 +3,28 @@ const settingsDir = './oven_settings';
 
 var currentSettings = JSON.parse(fs.readFileSync(settingsDir + '/hardware_settings.json'));
 
-module.exports.saveHardwareSettings = function (settings) {
+module.exports.saveSettings = function (settings) {
     if (settings.hasOwnProperty('relay_pin')) {
         currentSettings.relay_pin = parseInt(settings.relay_pin, 10);
     }
     if (settings.hasOwnProperty('fan_pin')) {
         currentSettings.fan_pin = parseInt(settings.fan_pin, 10);
     }
-    if (settings.hasOwnProperty('fan_timeout')) {
-        currentSettings.fan_timeout = parseInt(settings.fan_timeout, 10);
+    if (settings.hasOwnProperty('fan_turnoff_temp')) {
+        currentSettings.fan_turnoff_temp = parseInt(settings.fan_turnoff_temp, 10);
     }
 
     fs.writeFileSync(settingsDir + '/hardware_settings.json', JSON.stringify(currentSettings, null, 3));
 }
 
-module.exports.getHardwareSettings = function () {
+module.exports.getAllSettings = function () {
     return currentSettings;
 }
 
-module.exports.getRelayPin = function () {
-    return currentSettings.relay_pin;
-}
-
-module.exports.getFanPin = function () {
-    return currentSettings.fan_pin;
-}
-
-module.exports.getFanTimeout = function () {
-    return currentSettings.fan_timeout;
+module.exports.getProperty = function (property) {
+    if (currentSettings.hasOwnProperty(property)) {
+        return currentSettings[property];
+    } else {
+        return null;
+    }
 }

@@ -7,17 +7,22 @@ module.exports = function(socketio, tempSensor) {
     const Gpio = require('onoff').Gpio;
     
     //set gpio
-    relay = new Gpio(hardwareSettings.getRelayPin(), 'out');
-    fan = new Gpio(hardwareSettings.getFanPin(), 'out');
+    var relay = new Gpio(hardwareSettings.getProperty('relay_pin'), 'out');
+    var fan = new Gpio(hardwareSettings.getProperty('fan_pin'), 'out');
 
     //list of things to export
     var module = {};
     var currentAction = "Ready";
-    var interval;
-    var fanTimeout;
+    var pidInterval;
+    var fanInterval;
     var currentProfile;
     var tempHistory = [];
     var percentDone = 0;
+
+    //sends message via socketio
+    function sendMessage(severity, message, channel = 'server_message') {
+        socketio.emit(channel, { severity: severity, message: message });
+    }
 
     //just a linear interpolation function
     function getTemperatureAtPoint(x) {
@@ -51,7 +56,7 @@ module.exports = function(socketio, tempSensor) {
     }
 
     module.startProfile = function() {
-        if (currentProfile == null || currentAction === "Preheat" || currentAction === "Running") {
+        if (currentProfile == null || currentAction !== "Ready") {
             return -1;
         }
 
@@ -59,14 +64,15 @@ module.exports = function(socketio, tempSensor) {
         tempHistory = [];
 
         //pid variables
-        var proportional = pidSettings.getP();
-        var integral = pidSettings.getI();
-        var derivative = pidSettings.getD();
-        var dt = pidSettings.getDeltaT();
-        var lookAhead = pidSettings.getLookAhead();
-        var onOffMode = pidSettings.getOnoff();
-        var preheat = pidSettings.getPreheat();
-        var preheatPower = pidSettings.getPreheatPower();
+        var proportional = pidSettings.getProperty('p');
+        var integral = pidSettings.getProperty('i');
+        var derivative = pidSettings.getProperty('d');
+        var dt = pidSettings.getProperty('delta_t');
+        var lookAhead = pidSettings.getProperty('look_ahead');
+        var onOffMode = pidSettings.getProperty('onoff_mode');
+        var preheat = pidSettings.getProperty('preheat');
+        var preheatPower = pidSettings.getProperty('preheat_power');
+        var fanOffTemp = hardwareSettings.getProperty('fan_turnoff_temp');
 
         if (preheat) {
             currentAction = "Preheat";
@@ -75,22 +81,39 @@ module.exports = function(socketio, tempSensor) {
         }
 
         //reset gpio in case of settings change
-        relay = new Gpio(hardwareSettings.getRelayPin(), 'out');
-        fan = new Gpio(hardwareSettings.getFanPin(), 'out');
+        relay = new Gpio(hardwareSettings.getProperty('relay_pin'), 'out');
+        fan = new Gpio(hardwareSettings.getProperty('fan_pin'), 'out');
     
         fanOn();
 
         let ctr = new Controller(proportional, integral, derivative, dt); // k_p, k_i, k_d, dt
+        var temperatureSnapshot = tempSensor.getTemp();
         var i = datapoints[0].x;
-        interval = setInterval(() => {
+
+        //go to a point in the profile where temperature matches ambient
+        while (temperatureSnapshot > getTemperatureAtPoint(i)) {
+            if (i < datapoints[datapoints.length - 1].x) {
+                i++;
+            } else {
+                sendMessage('error', 'Current temperature is above all points');
+                module.stop(true);
+                return -1;
+            }
+        }
+        pidInterval = setInterval(() => {
             temperatureSnapshot = tempSensor.getTemp();
             if (temperatureSnapshot < 0) {
                 module.stop(true);
+                if (temperatureSnapshot == -1) {
+                    sendMessage('error', 'Profile stopped. Thermocouple disconnected.');
+                } else if(temperatureSnapshot == -2) {
+                    sendMessage('error', 'Profile stopped. Thermocouples differ by more than 10 degrees.');
+                }
                 return -1;
             }
 
             if (preheat) {
-                if (temperatureSnapshot >= datapoints[0].y) {
+                if (temperatureSnapshot >= getTemperatureAtPoint(i + lookAhead)) {
                     preheat = false;
                     currentAction = "Running";
                 } else {
@@ -109,11 +132,15 @@ module.exports = function(socketio, tempSensor) {
                 } else {
                     ctr.setTarget(temperatureTarget);
                     var correction = ctr.update(temperatureSnapshot);
-                    console.log(correction);
+                    //console.log(correction);
                     turnRelayOn(correction);
                 }
-                if (i > datapoints[datapoints.length - 1].x + 30) {
-                    module.stop(true);
+                if (i > datapoints[datapoints.length - 1].x) {
+                    currentAction = "Cooling";
+                    sendMessage('success', 'Profile completed. Door can be opened to provide faster cooling if needed.');
+                    if (temperatureSnapshot <= fanOffTemp) {
+                        module.stop();
+                    }
                 }
                 tempHistory.push({ x: i, y: temperatureSnapshot });
                 percentDone = Math.floor((i / datapoints[datapoints.length - 1].x) * 100);
@@ -128,15 +155,10 @@ module.exports = function(socketio, tempSensor) {
     }
     
     
-    module.stop = function(shouldDelayFan) {
-        clearInterval(interval);
+    module.stop = function(shouldWaitForFan = false) {
+        clearInterval(pidInterval);
         relay.writeSync(0);
-        if (shouldDelayFan) {
-            fanOff(hardwareSettings.getFanTimeout() * 1000);
-        } else {
-            fanOff(0);
-        }
-        
+        fanOff(shouldWaitForFan);
     }
     
     module.getStatus = function() {
@@ -154,7 +176,6 @@ module.exports = function(socketio, tempSensor) {
     }
     
     module.loadProfile = function (profileName) {
-        module.stop(false);
         currentProfile = profile.getProfile(profileName);
         tempHistory = [];
         percentDone = 0;
@@ -175,22 +196,24 @@ module.exports = function(socketio, tempSensor) {
     }
 
     function fanOn() {
-        if (fanTimeout !== null) {
-            clearTimeout(fanTimeout);
-        }
+        clearInterval(fanInterval);
         fan.writeSync(1);
     }
 
-    function fanOff(afterTimeout) {
-        if (afterTimeout === 0) {
+    function fanOff(shouldWaitForFan) {
+        if (shouldWaitForFan) {
+            currentAction = "Cooling";
+            fanInterval = setInterval(() => {
+                temp = tempSensor.getTemp();
+                if (temp <= hardwareSettings.getProperty('fan_turnoff_temp') && temp >= 0) {
+                    fan.writeSync(0);
+                    currentAction = "Ready";
+                    clearInterval(fanInterval);
+                }
+            }, 1000);
+        } else {
             fan.writeSync(0);
             currentAction = "Ready";
-        } else {
-            currentAction = "Cooling";
-            fanTimeout = setTimeout(function () {
-                fan.writeSync(0);
-                currentAction = "Ready";
-            }, afterTimeout);
         }
     }
 
@@ -204,7 +227,7 @@ module.exports = function(socketio, tempSensor) {
     });
 
     process.on('exit', (code) => {
-        module.stop(false);
+        module.stop();
     });
 
     process.on('SIGINT', () => {
