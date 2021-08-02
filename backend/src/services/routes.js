@@ -42,7 +42,8 @@ module.exports = function (app, express, socketio) {
     });
 
     app.post("/api/send_message", (req, res) => {
-        socketio.emit("server_message", { message: "[" + req.headers['x-forwarded-for'] + "] " + req.body.message, severity: 'info'});
+        var ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+        socketio.emit("server_message", { message: "[" + ip + "] " + req.body.message, severity: 'info'});
         res.json({ status: 200, message: "message sent" });
     });
 
