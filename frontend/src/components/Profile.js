@@ -161,6 +161,18 @@ class Profile extends Component {
                     },
                     title: {
                         display: false,
+                        color: 'white',
+                        fullsize: true,
+                        position: 'bottom',
+                        align: 'start',
+                        text: this.props.profile.name,
+                        padding: {
+                            top: 0,
+                            bottom: 0
+                        },
+                        font: {
+                            size: 30,
+                        }
                     },
                 },
             }} />

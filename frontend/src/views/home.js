@@ -203,7 +203,7 @@ class Home extends Component {
               <Grid item sm={2}>
                 <Box sx={{ paddingTop: 20 }}>
                   <Paper>
-                    <Stepper activeStep={this.state.activeStep} orientation='vertical'>
+                    <Stepper activeStep={this.state.activeStep} orientation='vertical' square={false}>
                       {this.steps.map((step, index) => (
                         <Step key={step.label} >
                           <StepLabel>
@@ -225,19 +225,23 @@ class Home extends Component {
             </Grid>
           </Grid>
 
-
-
-          <Grid container spacing={3} alignItems="center" justify="flex-end" style={{ paddingTop: '15px' }}>
-            <Grid item xs={3} md={4} lg={6} xl={7}>
-              <Typography variant='h5'>
-                {this.state.currentProfile.name}
-              </Typography>
+          <Grid container spacing={3} alignItems="center" justifyContent='space-between' style={{ paddingTop: '15px' }}>
+            <Grid item xs={6}>
+              <Paper style={{ padding: '6px 7px 6px 10px' }}>
+                <Typography>
+                  Profile: {this.state.currentProfile.name}
+                </Typography>
+              </Paper>
             </Grid>
             <Grid item>
-              <Button component={Link} to={{ pathname: '/editProfile', state: { profile: this.state.currentProfile } }} startIcon={<EditIcon />} variant="contained" color="primary" >Edit Current Profile</Button>
-            </Grid>
-            <Grid item>
-              {stopStartButton}
+              <Grid container spacing={3}>
+                <Grid item>
+                  <Button component={Link} to={{ pathname: '/editProfile', state: { profile: this.state.currentProfile } }} startIcon={<EditIcon />} variant="contained" color="primary" >Edit Current Profile</Button>
+                </Grid>
+                <Grid item>
+                  {stopStartButton}
+                </Grid>
+              </Grid>
             </Grid>
           </Grid>
         </Container>

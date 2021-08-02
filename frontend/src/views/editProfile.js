@@ -20,7 +20,6 @@ import ArrowDownwardIcon from '@material-ui/icons/ArrowDownward';
 import ArrowBackIcon from '@material-ui/icons/ArrowBack';
 import ArrowForwardIcon from '@material-ui/icons/ArrowForward';
 import Paper from '@material-ui/core/Paper';
-import { withStyles } from '@material-ui/core/styles';
 
 
 class EditProfile extends Component {
@@ -61,15 +60,6 @@ class EditProfile extends Component {
     this.addNode = this.addNode.bind(this);
     this.subtractNode = this.subtractNode.bind(this);
   }
-
-  SaveButton = withStyles({
-    root: {
-      backgroundColor: '#00ba16',
-      '&:hover': {
-        backgroundColor: '#009612'
-      }
-    }
-  })(Button);
 
   //shift layout doesn't do anything. just there for reference
   layout = {
@@ -477,17 +467,23 @@ class EditProfile extends Component {
         </Container>
         
         <Container maxWidth={false}>
-          <Grid container spacing={3} alignItems="center" justify="flex-end" style={{ paddingTop: '20px' }}>
-            <Grid item xs={5} md={6} lg={7} xl={8}>
-              <Typography variant='h5'>
-                {this.state.newProfile.name}
-              </Typography>
+          <Grid container spacing={3} alignItems="center" justifyContent="space-between" style={{ paddingTop: '15px' }}>
+            <Grid item xs={6}>
+              <Paper style={{ padding: '6px 7px 6px 10px' }}>
+                <Typography>
+                  Profile: {this.state.newProfile.name}
+                </Typography>
+              </Paper>
             </Grid>
             <Grid item>
-              <Button onClick={this.goBack} startIcon={<CancelIcon />} variant="contained" color="primary">Cancel</Button>
-            </Grid>
-            <Grid item>
-              <this.SaveButton onClick={this.saveClicked} startIcon={<SaveIcon />} variant="contained" color="primary">Save</this.SaveButton>
+              <Grid container spacing={3}>
+                <Grid item>
+                  <Button onClick={this.goBack} startIcon={<CancelIcon />} variant="contained" color="primary">Cancel</Button>
+                </Grid>
+                <Grid item>
+                  <Button onClick={this.saveClicked} startIcon={<SaveIcon />} variant="contained" color="primary">Save</Button>
+                </Grid>
+              </Grid>
             </Grid>
           </Grid>
         </Container>

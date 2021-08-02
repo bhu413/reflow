@@ -128,8 +128,8 @@ class StatusBar extends Component {
             <>
                 <Snackbar anchorOrigin={{
                     vertical: 'top',
-                    horizontal: 'right'}} open={this.state.serverMessageSnackbar} autoHideDuration={20000} onClose={this.snackbarClosed}>
-                    <MuiAlert elevation={6} variant="filled" severity={this.state.serverMessageSeverity}>
+                    horizontal: 'right'}} open={this.state.serverMessageSnackbar} autoHideDuration={20000}>
+                    <MuiAlert elevation={6} variant="filled" severity={this.state.serverMessageSeverity} onClose={this.snackbarClosed}>
                         {this.state.serverMessage}
                     </MuiAlert>
                 </Snackbar>
@@ -189,7 +189,7 @@ class StatusBar extends Component {
                         </div>
 
                     </Toolbar>
-                    <LinearProgress variant="determinate" color='secondary' value={this.state.percentage} />
+                    <LinearProgress style={{height: 5}} variant="determinate" color='secondary' value={this.state.percentage} />
                 </AppBar>
 
                 <Drawer open={this.state.drawer} onClose={this.drawerChange} >

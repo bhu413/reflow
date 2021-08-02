@@ -121,6 +121,11 @@ module.exports = function (app, express, socketio) {
         res.json({ status: validCode.status, message: validCode.message });
     });
 
+    app.post("/api/reflow_profiles/delete", (req, res) => {
+        var validCode = profile.deleteProfile(req.body.profile_name);
+        res.json({ status: validCode.status, message: validCode.message });
+    });
+
     app.post("/api/run", (req, res) => {
         if (oven.getStatus().status !== "Ready") {
             if (req.body.override) {

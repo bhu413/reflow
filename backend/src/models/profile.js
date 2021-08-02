@@ -34,6 +34,12 @@ module.exports.saveProfile = function(profile) {
     return validCode;
 }
 
+module.exports.deleteProfile = function (profileName) {
+    fs.rmSync(profileDir + '/' + profileName + '.json');
+    updateProfileList();
+    return { status: 200, message: 'profile deleted' };
+}
+
 module.exports.getProfileList = function() {
     return fs.readdirSync(profileDir);
 }
@@ -73,6 +79,7 @@ function deleteOldestProfile() {
     if (oldestProfile != null) {
         fs.rmSync(profileDir + '/' + oldestProfile);
     }
+    updateProfileList();
 }
 
 function getNumProfiles() {

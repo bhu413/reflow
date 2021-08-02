@@ -12,6 +12,7 @@ import { withStyles } from '@material-ui/core/styles';
 import EditIcon from '@material-ui/icons/Edit';
 import CloseIcon from '@material-ui/icons/Close';
 import StatusBar from '../components/StatusBar';
+import DeleteIcon from '@material-ui/icons/Delete';
 import FileSaver from 'file-saver';
 
 class ProfileList extends Component {
@@ -21,7 +22,14 @@ class ProfileList extends Component {
     if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" || window.location.hostname === "") {
       isLocal = true;
     }
-    this.state = ({ profiles: [], activeItem: "", dialog: false, forceLoadDialog: false, allowUploadDownload: !isLocal });
+    this.state = ({
+      profiles: [],
+      activeItem: "",
+      dialog: false,
+      forceLoadDialog: false,
+      allowUploadDownload: !isLocal,
+      deleteDialog: false,
+    });
     this.loadClicked = this.loadClicked.bind(this);
     this.forceLoadClicked = this.forceLoadClicked.bind(this);
     this.handleItemClick = this.handleItemClick.bind(this);
@@ -29,6 +37,9 @@ class ProfileList extends Component {
     this.downloadProfile = this.downloadProfile.bind(this);
     this.fileChanged = this.fileChanged.bind(this);
     this.handleForceDialogClose = this.handleForceDialogClose.bind(this);
+    this.handleDeleteDialogClose = this.handleDeleteDialogClose.bind(this);
+    this.deleteClicked = this.deleteClicked.bind(this);
+    this.deleteProfile = this.deleteProfile.bind(this);
   }
 
   SelectButton = withStyles({
@@ -40,20 +51,35 @@ class ProfileList extends Component {
     }
   })(Button);
 
+  DeleteButton = withStyles({
+    root: {
+      backgroundColor: '#bf0000',
+      '&:hover': {
+        backgroundColor: '#870000'
+      }
+    }
+  })(Button);
+
   columns = [
-    { field: 'name', headerName: 'Profile Name', width: 200 },
+    {
+      field: 'name',
+      headerName: 'Profile Name',
+      width: 300,
+    },
     {
       field: 'last_run',
       headerName: 'Last Loaded',
+      type: 'dateTime',
       width: 200,
       editable: false,
     },
     {
       field: 'date_created',
       headerName: 'Date Created',
+      type: 'dateTime',
       width: 200,
       editable: false,
-    },
+    }
   ];
 
 
@@ -68,6 +94,10 @@ class ProfileList extends Component {
 
   handleForceDialogClose() {
     this.setState({ forceLoadDialog: false });
+  }
+
+  handleDeleteDialogClose() {
+    this.setState({ deleteDialog: false });
   }
 
   componentDidMount() {
@@ -138,9 +168,19 @@ class ProfileList extends Component {
           this.getData();
         });
     };
-    
   }
 
+  deleteProfile() {
+    axios.post('/api/reflow_profiles/delete', { profile_name: this.state.activeItem.name })
+      .then(res => {
+        this.getData();
+        this.setState({ deleteDialog: false, dialog: false });
+      });
+  }
+
+  deleteClicked() {
+    this.setState({ deleteDialog: true });
+  }
 
   render() {
     return (
@@ -159,11 +199,26 @@ class ProfileList extends Component {
             </div>
           </DialogContent>
           <DialogActions>
-            {this.state.allowUploadDownload && 
-              <Button startIcon={<SaveAltIcon />} variant="contained" color="primary" onClick={this.downloadProfile}>Download</Button>
-            }
-            <Button component={Link} to={{ pathname: '/editProfile', state: { profile: this.state.activeItem } }} startIcon={<EditIcon />} variant="contained" color="primary">Edit Profile</Button>
-            <this.SelectButton onClick={this.loadClicked} startIcon={<DoneIcon />} variant="contained" color='primary'>Load</this.SelectButton>
+            <Grid container justifyContent='space-between'>
+              <Grid item>
+                <this.DeleteButton startIcon={<DeleteIcon />} variant='contained' color='primary' onClick={this.deleteClicked}>Delete</this.DeleteButton>
+              </Grid>
+              <Grid item>
+                <Grid container spacing={2}>
+                  <Grid item>
+                    {this.state.allowUploadDownload &&
+                      <Button startIcon={<SaveAltIcon />} variant="contained" color="primary" onClick={this.downloadProfile}>Download</Button>
+                    }
+                  </Grid>
+                  <Grid item>
+                    <Button component={Link} to={{ pathname: '/editProfile', state: { profile: this.state.activeItem } }} startIcon={<EditIcon />} variant="contained" color="primary">Edit Profile</Button>
+                  </Grid>
+                  <Grid item>
+                    <this.SelectButton onClick={this.loadClicked} startIcon={<DoneIcon />} variant="contained" color='primary'>Load</this.SelectButton>
+                  </Grid>
+                </Grid>
+              </Grid>
+            </Grid>
           </DialogActions>
         </Dialog>
 
@@ -180,6 +235,23 @@ class ProfileList extends Component {
             </Button>
             <Button onClick={this.forceLoadClicked} color="primary" autoFocus>
               Force Load
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        <Dialog open={this.state.deleteDialog}>
+          <DialogTitle>
+            Delete Profile
+          </DialogTitle>
+          <DialogContent>
+            Are you sure you want to delete {}?
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={this.handleDeleteDialogClose} color="primary">
+              Cancel
+            </Button>
+            <Button onClick={this.deleteProfile} color="primary" autoFocus>
+              Delete
             </Button>
           </DialogActions>
         </Dialog>
@@ -208,7 +280,7 @@ class ProfileList extends Component {
             </Grid>
               {this.state.allowUploadDownload &&
                 <Grid item>
-                  <Button startIcon={<PublishIcon />} variant="contained" color="primary" component="label" >Upload<input type="file" accept=".json" hidden onChange={this.fileChanged} /></Button>
+              <Button startIcon={<PublishIcon />} variant="contained" color="primary" component="label" >Upload<input type="file" accept="application/JSON" hidden onChange={this.fileChanged} /></Button>
                 </Grid>
               }
             <Grid item>
