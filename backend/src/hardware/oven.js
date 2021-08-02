@@ -73,6 +73,7 @@ module.exports = function(socketio, tempSensor) {
         var preheat = pidSettings.getProperty('preheat');
         var preheatPower = pidSettings.getProperty('preheat_power');
         var fanOffTemp = hardwareSettings.getProperty('fan_turnoff_temp');
+        var coolingMessageSent = false;
 
         if (preheat) {
             currentAction = "Preheat";
@@ -137,7 +138,10 @@ module.exports = function(socketio, tempSensor) {
                 }
                 if (i > datapoints[datapoints.length - 1].x) {
                     currentAction = "Cooling";
-                    sendMessage('success', 'Profile completed. Door can be opened to provide faster cooling if needed.');
+                    if (!coolingMessageSent) {
+                        sendMessage('success', 'Profile completed. Door can be opened to provide faster cooling if needed.');
+                        coolingMessageSent = true;
+                    }
                     if (temperatureSnapshot <= fanOffTemp) {
                         module.stop();
                     }
