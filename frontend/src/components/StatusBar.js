@@ -103,6 +103,7 @@ class StatusBar extends Component {
 
     componentWillUnmount() {
         socket.off("status_update");
+        socket.off("server_message");
     }
 
     qrClicked() {
