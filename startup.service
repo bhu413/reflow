@@ -1,0 +1,9 @@
+[Unit]
+Description=Startup Direct to Kiosk Mode systemd service.
+
+[Service]
+Type=simple
+ExecStart=/bin/bash /home/startup.sh
+
+[Install]
+WantedBy=multi-user.target
