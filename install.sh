@@ -1,8 +1,13 @@
 #!/bin/sh
 # R-Pi for Reflow Oven Installation script
-# clone the github reflow oven controller and UI code
-# do this step first on your own, then run this script
+
+
+
+# Do these first steps on your own:
+# execute the following commands
 # git clone https://github.com/bhu413/reflow
+# chmod +x install.sh
+# sudo ./install.sh
 
 #install npm
 curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -
@@ -15,10 +20,8 @@ cd backend
 npm install
 
 #copy startup script to constant location
-cp startup.sh /home/startup.sh
-rm startup.sh
-
-
+cp backend/startup.sh /home/startup.sh
+rm backend/startup.sh
 
 cd startup.service /etc/systemd/system/startup.service
 rm startup.service
