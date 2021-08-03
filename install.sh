@@ -16,6 +16,7 @@ sudo apt-get install -y nodejs
 
 #change directory to backend
 cd backend
+#different line
 #totally different from install npm <3
 npm install
 
