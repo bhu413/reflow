@@ -47,8 +47,12 @@ class Profile extends Component {
         var secondaryColor = this.props.theme.palette.secondary.main;
         var transparentSecondary = alpha(this.props.theme.palette.secondary.main, 0.2);
         var tempColors = new Array(10).fill(transparentPrimary);
+        var historicTempPointSize = 2;
         if (this.props.draggable) {
             tempColors[this.props.activePoint] = secondaryColor;
+        }
+        if (this.props.historicTemps && this.props.historicTemps.length === 1) {
+            historicTempPointSize = 8;
         }
 
         return (
@@ -75,8 +79,8 @@ class Profile extends Component {
                         backgroundColor: transparentSecondary,
                         borderColor: secondaryColor,
                         borderWidth: 1,
-                        pointRadius: 3,
-                        hoverRadius: 4,
+                        pointRadius: historicTempPointSize,
+                        hoverRadius: historicTempPointSize + 1,
                         dragData: false,
                         borderDash: [10, 5],
                         fill: 0,

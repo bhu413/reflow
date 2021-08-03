@@ -23,7 +23,6 @@ io.on("connection", (socket) => {
 });
 
 require("./src/services/routes")(app, express, io);
-//require("./src/services/test-routes")(app);
 
 
 

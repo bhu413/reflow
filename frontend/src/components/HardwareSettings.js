@@ -17,9 +17,10 @@ import axios from 'axios';
 class HardwareSettings extends Component {
     constructor() {
         super();
-        this.state = { relayPin: 5, fanPin: 6, inputChanged: false, relayError: false, fanError: false, fanTurnoffTemp: 0 };
+        this.state = { relayPin: 5, fanPin: 6, coolingFanPin: 16, inputChanged: false, relayError: false, fanError: false, coolingFanError: false, fanTurnoffTemp: 0 };
         this.handleRelayChange = this.handleRelayChange.bind(this);
         this.handleFanChange = this.handleFanChange.bind(this);
+        this.handleCoolingFanChange = this.handleCoolingFanChange.bind(this);
         this.handleFanTurnoffChange = this.handleFanTurnoffChange.bind(this);
         this.errorClose = this.errorClose.bind(this);
         this.save = this.save.bind(this);
@@ -34,7 +35,7 @@ class HardwareSettings extends Component {
     }
 
     handleRelayChange(e) {
-        if (e.target.value === this.state.fanPin) {
+        if (e.target.value === this.state.fanPin || e.target.value === this.state.coolingFanPin) {
             this.setState({ relayError: true });
         } else {
             this.setState({relayPin: e.target.value, inputChanged: true})
@@ -42,10 +43,18 @@ class HardwareSettings extends Component {
     }
 
     handleFanChange(e) {
-        if (e.target.value === this.state.relayPin) {
+        if (e.target.value === this.state.relayPin || e.target.value === this.state.coolingFanPin) {
             this.setState({ fanError: true });
         } else {
             this.setState({ fanPin: e.target.value, inputChanged: true })
+        }
+    }
+
+    handleCoolingFanChange(e) {
+        if (e.target.value === this.state.relayPin || e.target.value === this.state.fanPin) {
+            this.setState({ coolingFanError: true });
+        } else {
+            this.setState({ coolingFanPin: e.target.value, inputChanged: true })
         }
     }
 
@@ -56,13 +65,14 @@ class HardwareSettings extends Component {
     }
 
     errorClose() {
-        this.setState({ relayError: false, fanError: false });
+        this.setState({ relayError: false, fanError: false, coolingFanError: false });
     }
 
     save() {
         var newSettings = {};
         newSettings.relay_pin = this.state.relayPin;
         newSettings.fan_pin = this.state.fanPin;
+        newSettings.cooling_fan_pin = this.state.coolingFanPin;
         newSettings.fan_turnoff_temp = this.state.fanTurnoffTemp;
         axios.post('/api/settings/hardware', newSettings)
             .then(res => {
@@ -86,13 +96,19 @@ class HardwareSettings extends Component {
 
                     <Snackbar open={this.state.relayError} autoHideDuration={5000} onClose={this.errorClose}>
                         <MuiAlert elevation={6} variant="filled" severity="error">
-                            Relay pin cannot be same as fan pin!
+                            Relay pin cannot be same as other pins!
                         </MuiAlert>
                     </Snackbar>
 
                     <Snackbar open={this.state.fanError} autoHideDuration={5000} onClose={this.errorClose}>
                         <MuiAlert elevation={6} variant="filled" severity="error">
-                            Fan pin cannot be same as Relay pin!
+                            Fan pin cannot be same as other pins!
+                        </MuiAlert>
+                    </Snackbar>
+
+                    <Snackbar open={this.state.coolingFanError} autoHideDuration={5000} onClose={this.errorClose}>
+                        <MuiAlert elevation={6} variant="filled" severity="error">
+                            Cooling fan pin cannot be same as other pins!
                         </MuiAlert>
                     </Snackbar>
 
@@ -115,8 +131,25 @@ class HardwareSettings extends Component {
                             </FormControl>
                         </Grid>
                         <Grid item>
+                            <FormControl >
+                                <InputLabel>Cooling Fan GPIO</InputLabel>
+                                <Select value={this.state.coolingFanPin} onChange={this.handleCoolingFanChange}>
+                                    <MenuItem value={5}>5 (pin 29)</MenuItem>
+                                    <MenuItem value={6}>6 (pin 31)</MenuItem>
+                                    <MenuItem value={16}>16 (pin 36)</MenuItem>
+                                    <MenuItem value={17}>17 (pin 11)</MenuItem>
+                                    <MenuItem value={22}>22 (pin 15)</MenuItem>
+                                    <MenuItem value={23}>23 (pin 16)</MenuItem>
+                                    <MenuItem value={24}>24 (pin 18)</MenuItem>
+                                    <MenuItem value={25}>25 (pin 22)</MenuItem>
+                                    <MenuItem value={26}>26 (pin 37)</MenuItem>
+                                    <MenuItem value={27}>27 (pin 13)</MenuItem>
+                                </Select>
+                            </FormControl>
+                        </Grid>
+                        <Grid item>
                             <FormControl>
-                                <InputLabel>Fan GPIO</InputLabel>
+                                <InputLabel>Convection Fan GPIO</InputLabel>
                                 <Select value={this.state.fanPin} onChange={this.handleFanChange}>
                                     <MenuItem value={5}>5 (pin 29)</MenuItem>
                                     <MenuItem value={6}>6 (pin 31)</MenuItem>

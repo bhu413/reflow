@@ -22,6 +22,9 @@ module.exports.saveSettings = function (settings) {
     if (settings.hasOwnProperty('preheat_power')) {
         currentSettings.preheat_power = parseFloat(settings.preheat_power);
     }
+    if (settings.hasOwnProperty('always_hit_peak')) {
+        currentSettings.always_hit_peak = settings.always_hit_peak;
+    }
 
     fs.writeFileSync(settingsDir + '/pid_settings.json', JSON.stringify(currentSettings, null, 3));
 }

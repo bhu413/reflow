@@ -14,6 +14,8 @@ import axios from 'axios';
 import StopIcon from '@material-ui/icons/Stop';
 import QRCode from "qrcode.react";
 import CloseIcon from '@material-ui/icons/Close';
+import WhatshotIcon from '@material-ui/icons/Whatshot';
+import ToysIcon from '@material-ui/icons/Toys';
 import Snackbar from '@material-ui/core/Snackbar';
 import MuiAlert from '@material-ui/lab/Alert';
 import { ListItem, Drawer, ListItemText, ListItemIcon, Divider, Dialog, DialogTitle, DialogContent } from '@material-ui/core';
@@ -43,6 +45,10 @@ class StatusBar extends Component {
             serverMessageSeverity: "",
             serverMessageSnackbar: false
         };
+    }
+
+    componentWillReceiveProps() {
+        return true;
     }
 
     StopButton = withStyles({
@@ -129,7 +135,7 @@ class StatusBar extends Component {
             <>
                 <Snackbar anchorOrigin={{
                     vertical: 'top',
-                    horizontal: 'right'}} open={this.state.serverMessageSnackbar} autoHideDuration={20000}>
+                    horizontal: 'right'}} open={this.state.serverMessageSnackbar} autoHideDuration={20000} onClose={this.snackbarClosed}>
                     <MuiAlert elevation={6} variant="filled" severity={this.state.serverMessageSeverity} onClose={this.snackbarClosed}>
                         {this.state.serverMessage}
                     </MuiAlert>
