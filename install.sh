@@ -20,9 +20,10 @@ cd backend
 npm install
 
 #copy startup script to constant location
-chmod +x backend/startup.sh
-cp backend/startup.sh /home/startup.sh
-#rm backend/startup.sh
+cd ..
+chmod +x startup.sh
+cp startup.sh /home/startup.sh
+#rm startup.sh
 
 cd startup.service /etc/systemd/system/startup.service
 #rm startup.service
