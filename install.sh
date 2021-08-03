@@ -22,10 +22,10 @@ npm install
 #copy startup script to constant location
 chmod +x backend/startup.sh
 cp backend/startup.sh /home/startup.sh
-rm backend/startup.sh
+#rm backend/startup.sh
 
 cd startup.service /etc/systemd/system/startup.service
-rm startup.service
+#rm startup.service
 
 chmod 644 /etc/systemd/system/startup.service
 systemctl enable /etc/systemd/system/startup.service
