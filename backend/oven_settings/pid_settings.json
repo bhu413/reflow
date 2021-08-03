@@ -6,5 +6,6 @@
    "delta_t": 1,
    "look_ahead": 10,
    "preheat": true,
-   "preheat_power": 0.7
+   "preheat_power": 0.7,
+   "always_hit_peak": true
 }

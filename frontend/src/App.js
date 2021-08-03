@@ -27,15 +27,28 @@ class App extends Component {
     this.toggleDarkMode = this.toggleDarkMode.bind(this);
     this.setPrimaryColor = this.setPrimaryColor.bind(this);
     this.setSecondaryColor = this.setSecondaryColor.bind(this);
+    this.fetchAppearance = this.fetchAppearance.bind(this);
   }
 
   componentDidMount() {
+    this.fetchAppearance();
+    
+    socket.on("appearance_update", (message) => {
+      console.log(message);
+      this.setState({
+        darkMode: message.dark_mode,
+        primary: message.primary_color,
+        secondary: message.secondary_color
+      })
+    });
+  }
+
+  fetchAppearance() {
     fetch('/api/settings/appearance')
       .then(response => response.json())
       .then(result => {
         this.setState({ darkMode: result.dark_mode, primary: result.primary_color, secondary: result.secondary_color });
       });
-    
   }
 
   componentWillUnmount() {

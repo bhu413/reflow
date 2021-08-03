@@ -10,6 +10,9 @@ module.exports.saveSettings = function (settings) {
     if (settings.hasOwnProperty('fan_pin')) {
         currentSettings.fan_pin = parseInt(settings.fan_pin, 10);
     }
+    if (settings.hasOwnProperty('cooling_fan_pin')) {
+        currentSettings.cooling_fan_pin = parseInt(settings.cooling_fan_pin, 10);
+    }
     if (settings.hasOwnProperty('fan_turnoff_temp')) {
         currentSettings.fan_turnoff_temp = parseInt(settings.fan_turnoff_temp, 10);
     }

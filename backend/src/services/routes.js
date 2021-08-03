@@ -9,10 +9,10 @@ module.exports = function (app, express, socketio) {
     const profile = require('../models/profile');
     var oven;
     if (process.platform !== "linux") {
-        tempSensor = require('../hardware/temp_sensor_sim')(socketio);
+        tempSensor = require('../hardware/temp_sensor_sim');
         oven = require('../hardware/oven_sim')(socketio, tempSensor);
     } else {
-        tempSensor = require('../hardware/temp_sensor')(socketio);
+        tempSensor = require('../hardware/temp_sensor');
         oven = require('../hardware/oven')(socketio, tempSensor);
     }
 
@@ -110,6 +110,7 @@ module.exports = function (app, express, socketio) {
 
     app.post("/api/settings/appearance", (req, res) => {
         appearanceSettings.saveSettings(req.body);
+        socketio.emit('appearance_update', appearanceSettings.getAllSettings());
         res.json({ status: 200, message: "Saved successfully" });
     });
 

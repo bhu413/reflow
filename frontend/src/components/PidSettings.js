@@ -11,7 +11,7 @@ import axios from 'axios';
 class PidSettings extends Component {
     constructor() {
         super();
-        this.state = { p: 0, i: 0, d: 0, lookAhead: 0, preheat: false, preheatPower: 0, inputChanged: false };
+        this.state = { p: 0, i: 0, d: 0, lookAhead: 0, preheat: false, preheatPower: 0, alwaysHitPeak: false, inputChanged: false };
         this.save = this.save.bind(this);
         this.handlePChange = this.handlePChange.bind(this);
         this.handleIChange = this.handleIChange.bind(this);
@@ -19,6 +19,7 @@ class PidSettings extends Component {
         this.handlePreheatChange = this.handlePreheatChange.bind(this);
         this.handleLookAheadChange = this.handleLookAheadChange.bind(this);
         this.handlePreheatPowerChange = this.handlePreheatPowerChange.bind(this);
+        this.handleAlwaysHitPeakChange = this.handleAlwaysHitPeakChange.bind(this);
     }
 
     componentDidMount() {
@@ -37,6 +38,7 @@ class PidSettings extends Component {
         newSettings.look_ahead = this.state.lookAhead;
         newSettings.preheat = this.state.preheat;
         newSettings.preheat_power = this.state.preheatPower;
+        newSettings.always_hit_peak = this.state.alwaysHitPeak;
         axios.post('/api/settings/pid', newSettings)
             .then(res => {
                 if (res.data.status === 200) {
@@ -73,6 +75,10 @@ class PidSettings extends Component {
         }
     }
 
+    handleAlwaysHitPeakChange(e) {
+        this.setState({ alwaysHitPeak: e.target.checked, inputChanged: true });
+    }
+
 
     render() {
         return (
@@ -86,17 +92,17 @@ class PidSettings extends Component {
                 </AccordionSummary>
                 <AccordionDetails>
                     <Grid container spacing={3} direction='column' alignItems="flex-start" >
-                        
+
                         <Grid item>
                             <Grid container spacing={2}>
                                 <Grid item>
                                     <TextField variant="outlined" type='number' label='Proportional' value={this.state.p} onChange={this.handlePChange} />
                                 </Grid>
                                 <Grid item>
-                                    <TextField variant="outlined" type='number' label='Integral' value={this.state.i} onChange={this.handleIChange}/>
+                                    <TextField variant="outlined" type='number' label='Integral' value={this.state.i} onChange={this.handleIChange} />
                                 </Grid>
                                 <Grid item>
-                                    <TextField variant="outlined" type='number' label='Derivative' value={this.state.d} onChange={this.handleDChange}/>
+                                    <TextField variant="outlined" type='number' label='Derivative' value={this.state.d} onChange={this.handleDChange} />
                                 </Grid>
                             </Grid>
                         </Grid>
@@ -119,7 +125,13 @@ class PidSettings extends Component {
                                 </Grid>
                             </Grid>
                         </Grid>
-                        
+                        <Grid item>
+                            <Typography align='left'>
+                                Always Hit Peak
+                            </Typography>
+                            <Switch checked={this.state.alwaysHitPeak} onChange={this.handleAlwaysHitPeakChange} color='primary' />
+                        </Grid>
+
                         <Grid container justifyContent='flex-end' spacing={3}>
                             <Grid item>
                                 <Button variant='contained' color='primary' disabled={!this.state.inputChanged} onClick={this.save}>

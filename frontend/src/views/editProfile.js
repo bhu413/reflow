@@ -201,7 +201,24 @@ class EditProfile extends Component {
   dragEnd(e, datasetIndex, index, value) {
     var tempProfile = this.state.newProfile;
     tempProfile.datapoints[index] = value;
-    this.setState({ currentX: value.x, currentY: value.y, newProfile: tempProfile });
+
+    //sort datapoints so that lines don't overlap
+    for (let i = 0; i < tempProfile.datapoints.length; i++) {
+      for (let j = i; j < tempProfile.datapoints.length; j++) {
+        if (tempProfile.datapoints[j].x < tempProfile.datapoints[i].x) {
+          //keep track of index/current point
+          if (i === index) {
+            index = j;
+          } else if (j === index) {
+            index = i;
+          }
+          var tempPoint = tempProfile.datapoints[i];
+          tempProfile.datapoints[i] = tempProfile.datapoints[j];
+          tempProfile.datapoints[j] = tempPoint;
+        }
+      }
+    }
+    this.setState({ currentX: value.x, currentY: value.y, currentPoint: index, newProfile: tempProfile });
   }
 
   handleInputChange(e) {

@@ -95,7 +95,7 @@ class AppearanceSettings extends Component {
                                 <Grid container direction='column' alignItems='center'>
                                     <Grid item>
                                         <Typography variant='caption' >
-                                            If saved, theme will be applied to all new connections.
+                                            <span style={{color: 'red'}}>WARNING: </span>If saved, theme will be applied to all connections.
                                         </Typography>
                                     </Grid>
                                     <Grid item>
