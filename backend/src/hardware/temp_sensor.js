@@ -30,7 +30,6 @@ module.exports = function (socketio) {
 
         //check if third to last bit is 1
         if (binaryString.charAt(binaryString.length - 3) == '1') {
-            console.log("thermocouple disconnected!!!");
             return -1;
         } else {
             //get rid of last three bits
@@ -53,7 +52,11 @@ module.exports = function (socketio) {
         } else if (celcius2 == -1) {
             currentTemp = celcius1;
         } else {
-            currentTemp = (celcius1 + celcius2) / 2;
+            if (Math.abs(celcius1 - celcius2) >= 10) {
+                currentTemp = -2;
+            } else {
+                currentTemp = (celcius1 + celcius2) / 2;
+            }
         }
     }
 

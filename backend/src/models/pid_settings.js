@@ -3,7 +3,7 @@ const settingsDir = './oven_settings';
 
 var currentSettings = JSON.parse(fs.readFileSync(settingsDir + '/pid_settings.json'));
 
-module.exports.savePidSettings = function (settings) {
+module.exports.saveSettings = function (settings) {
     if (settings.hasOwnProperty('p')) {
         currentSettings.p = parseFloat(settings.p);
     }
@@ -26,38 +26,15 @@ module.exports.savePidSettings = function (settings) {
     fs.writeFileSync(settingsDir + '/pid_settings.json', JSON.stringify(currentSettings, null, 3));
 }
 
-module.exports.getPidSettings = function () {
+module.exports.getAllSettings = function () {
     return currentSettings;
 }
 
-module.exports.getP = function () {
-    return currentSettings.p;
-}
-
-module.exports.getI = function () {
-    return currentSettings.i;
-}
-
-module.exports.getD = function () {
-    return currentSettings.d;
-}
-
-module.exports.getDeltaT = function () {
-    return currentSettings.delta_t;
-}
-
-module.exports.getLookAhead = function () {
-    return currentSettings.look_ahead;
-}
-
-module.exports.getPreheat = function () {
-    return currentSettings.preheat;
-}
-module.exports.getPreheatPower = function () {
-    return currentSettings.preheat_power;
-}
-
-module.exports.getOnoff = function () {
-    return currentSettings.onoff_mode;
+module.exports.getProperty = function (property) {
+    if (currentSettings.hasOwnProperty(property)) {
+        return currentSettings[property];
+    } else {
+        return null;
+    }
 }
 

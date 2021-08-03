@@ -13,10 +13,12 @@ import axios from 'axios';
 class NetworkSettings extends Component {
     constructor() {
         super();
-        this.state = { port: 3001, remoteConnections: true, inputChanged: false };
+        this.state = { port: 3001, remoteConnections: true, messageToSend: "", inputChanged: false };
         this.save = this.save.bind(this);
         this.handleSwitch = this.handleSwitch.bind(this);
         this.handlePortChange = this.handlePortChange.bind(this);
+        this.handleMessageChange = this.handleMessageChange.bind(this);
+        this.sendMessage = this.sendMessage.bind(this);
     }
 
     componentDidMount() {
@@ -47,6 +49,15 @@ class NetworkSettings extends Component {
         this.setState({ port: e.target.value, inputChanged: true });
     }
 
+    handleMessageChange(e) {
+        this.setState({ messageToSend: e.target.value });
+    }
+
+    sendMessage() {
+        axios.post('/api/send_message', { message: this.state.messageToSend })
+            .then(res => {});
+    }
+
     render() {
         return (
             <Accordion >
@@ -72,7 +83,22 @@ class NetworkSettings extends Component {
                             <Switch checked={this.state.remoteConnections} onChange={this.handleSwitch} color='primary' />
                         </Grid>
 
+                        <Grid item>
+                            <Typography align='left'>
+                                Send message to all connections
+                            </Typography>
+                            <TextField variant="outlined" onChange={this.handleMessageChange} value={this.state.messageToSend} />
+                            <Button variant='contained' color='primary' onClick={this.sendMessage}>
+                                Send
+                            </Button>
+                        </Grid>
+
                         <Grid container justifyContent='flex-end' spacing={3}>
+                            <Grid item>
+                                <Typography variant='caption'>
+                                    Changes will be applied after a manual restart of the server.
+                                </Typography>
+                            </Grid>
                             <Grid item>
                                 <Button variant='contained' color='primary' disabled={!this.state.inputChanged} onClick={this.save}>
                                     Save

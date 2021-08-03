@@ -3,7 +3,7 @@ const settingsDir = './oven_settings';
 
 var currentSettings = JSON.parse(fs.readFileSync(settingsDir + '/network_settings.json'));
 
-module.exports.saveNetworkSettings = function (settings) {
+module.exports.saveSettings = function (settings) {
     if (settings.hasOwnProperty('port')) {
         currentSettings.port = parseInt(settings.port, 10);
     }
@@ -13,16 +13,14 @@ module.exports.saveNetworkSettings = function (settings) {
     fs.writeFileSync(settingsDir + '/network_settings.json', JSON.stringify(currentSettings, null, 3));
 }
 
-module.exports.getNetworkSettings = function () {
+module.exports.getAllSettings = function () {
     return currentSettings;
 }
 
-module.exports.getPort = function () {
-    return currentSettings.port;
+module.exports.getProperty = function (property) {
+    if (currentSettings.hasOwnProperty(property)) {
+        return currentSettings[property];
+    } else {
+        return null;
+    }
 }
-
-module.exports.getRemoteConnection = function () {
-    return currentSettings.remote_connections;
-}
-
-

@@ -4,18 +4,13 @@ import Container from '@material-ui/core/Container';
 import NetworkSettings from '../components/NetworkSettings';
 import PidSettings from '../components/PidSettings';
 import HardwareSettings from "../components/HardwareSettings";
+import AppearanceSettings from '../components/AppearanceSettings';
 
 class Settings extends Component {
-    constructor() {
-        super();
-        this.handleChange = this.handleChange.bind(this);
-        this.currentlyExpanded = '';
-        this.state = ({ expanded: '' });
+    constructor(props) {
+        super(props);
     }
 
-    handleChange(panel) {
-        this.currentlyExpanded = panel;
-    }
 
     render() {
         return (
@@ -25,6 +20,14 @@ class Settings extends Component {
                     <PidSettings />
                     <HardwareSettings />
                     <NetworkSettings />
+                    <AppearanceSettings
+                        toggleDarkMode={this.props.toggleDarkMode}
+                        setPrimaryColor={this.props.setPrimaryColor}
+                        setSecondaryColor={this.props.setSecondaryColor}
+                        primary={this.props.primary}
+                        secondary={this.props.secondary}
+                        darkMode={this.props.darkMode}
+                    />
                 </Container>
             </>
         );

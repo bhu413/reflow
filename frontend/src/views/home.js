@@ -5,20 +5,26 @@ import StepLabel from '@material-ui/core/StepLabel';
 import StepContent from '@material-ui/core/StepContent';
 import Profile from '../components/Profile';
 import EditIcon from '@material-ui/icons/Edit';
-import { Button, Container, Grid, Typography, Box } from '@material-ui/core';
+import { Button, Container, Grid, Typography, Box, Paper, Hidden } from '@material-ui/core';
 import { Link } from "react-router-dom";
 import { socket } from '../helpers/socket';
 import axios from 'axios';
 import PlayArrowIcon from '@material-ui/icons/PlayArrow';
 import StopIcon from '@material-ui/icons/Stop';
 import StatusBar from '../components/StatusBar';
-import { styled } from '@material-ui/core/styles';
+import { withStyles } from '@material-ui/core/styles';
+import Dialog from '@material-ui/core/Dialog';
+import DialogActions from '@material-ui/core/DialogActions';
+import DialogContent from '@material-ui/core/DialogContent';
+import DialogTitle from '@material-ui/core/DialogTitle';
 
 class Home extends Component {
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
     this.runProfile = this.runProfile.bind(this);
+    this.forceRunProfile = this.forceRunProfile.bind(this);
     this.stop = this.stop.bind(this);
+    this.cancelClicked = this.cancelClicked.bind(this);
     this.state = ({
       currentProfile: {
         "name": "flat",
@@ -54,7 +60,8 @@ class Home extends Component {
       historicTemperature: [],
       percentDone: 0,
       status: "Ready",
-      activeStep: 0
+      activeStep: 0,
+      startWhenCoolingDialog: false,
     });
 
   }
@@ -77,10 +84,23 @@ class Home extends Component {
     }
   ];
 
-  StartButton = styled(Button)({
-    background: '#3dd900',
-    '&:hover': '#3dd900'
-  });
+  StartButton = withStyles({
+    root: {
+      backgroundColor: '#00ba16',
+      '&:hover': {
+        backgroundColor: '#009612'
+      }
+    }
+  })(Button);
+
+  StopButton = withStyles({
+    root: {
+      backgroundColor: '#bf0000',
+      '&:hover': {
+        backgroundColor: '#870000'
+      }
+    }
+  })(Button);
 
   componentDidMount() {
     fetch('/api/current_profile')
@@ -116,10 +136,21 @@ class Home extends Component {
   }
 
   runProfile() {
-    axios.post('/api/run', { override: false })
+      axios.post('/api/run', { override: false })
+        .then(res => {
+          if (res.data.status === 200) {
+            this.setState({ status: "Running" });
+          } else if (res.data.status === 409) {
+            this.setState({ startWhenCoolingDialog: true });
+          }
+        });
+  }
+
+  forceRunProfile() {
+    axios.post('/api/run', { override: true })
       .then(res => {
         if (res.data.status === 200) {
-          this.setState({ status: "Running" });
+          this.setState({ status: "Running", startWhenCoolingDialog: false  });
         }
       });
   }
@@ -133,50 +164,84 @@ class Home extends Component {
       });
   }
 
+  cancelClicked() {
+    this.setState({ startWhenCoolingDialog: false });
+  }
+
   render() {
     const isRunning = this.state.status === "Preheat" || this.state.status === "Running" ;
     let stopStartButton;
     if (isRunning) {
-      stopStartButton = <Button onClick={this.stop} startIcon={<StopIcon />} variant="contained" color="secondary">Stop</Button>;
+      stopStartButton = <this.StopButton onClick={this.stop} startIcon={<StopIcon />} variant="contained" color="secondary">Stop</this.StopButton>;
     } else {
       stopStartButton = <this.StartButton onClick={this.runProfile} startIcon={<PlayArrowIcon />} variant="contained" color="primary">Start</this.StartButton>;
     }
     return (
       <>
-
         <StatusBar />
+
+        <Dialog open={this.state.startWhenCoolingDialog} onClose={this.cancelClicked}>
+          <DialogTitle>
+            Oven still cooling
+          </DialogTitle>
+          <DialogContent>
+            Start profile anyway?
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={this.cancelClicked} color="primary">
+              Cancel
+            </Button>
+            <Button onClick={this.forceRunProfile} color="primary" autoFocus>
+              Start Anyway
+            </Button>
+          </DialogActions>
+        </Dialog>
+
         <Container maxWidth={false}>
+          
           <Grid container>
-            <Grid item sm={2}>
-              <Box sx={{ paddingTop: 20}}>
-                <Stepper activeStep={this.state.activeStep} orientation='vertical' style={{ background: '#454647' }}>
-                  {this.steps.map((step, index) => (
-                    <Step key={step.label} >
-                      <StepLabel>
-                        <Typography variant='subtitle2' align='left' style={{color: '#FFFFFF'}}>
-                          {step.label}
-                        </Typography>
-                      </StepLabel>
-                    </Step>
-                  ))}
-                </Stepper>
-              </Box>
-            </Grid>
+              <Grid item sm={2}>
+                <Box sx={{ paddingTop: 20 }}>
+                  <Paper>
+                    <Stepper activeStep={this.state.activeStep} orientation='vertical' square={false}>
+                      {this.steps.map((step, index) => (
+                        <Step key={step.label} >
+                          <StepLabel>
+                            <Typography variant='subtitle2' align='left'>
+                              {step.label}
+                            </Typography>
+                          </StepLabel>
+                        </Step>
+                      ))}
+                    </Stepper>
+                  </Paper>
+                </Box>
+              </Grid>
+            
             <Grid item sm={10}>
-              <div style={{ paddingTop: "20px", width: '96%', margin: '0 0 0 auto' }}>
+              <div style={{ paddingTop: "20px", width: '94%', margin: '0 0 0 auto' }}>
                 <Profile draggable={false} profile={this.state.currentProfile} historicTemps={this.state.historicTemperature} />
               </div>
             </Grid>
           </Grid>
 
-
-
-          <Grid container spacing={3} alignItems="center" justify="flex-end" style={{ paddingTop: '35px' }}>
-            <Grid item>
-              <Button component={Link} to={{ pathname: '/editProfile', state: { profile: this.state.currentProfile } }} startIcon={<EditIcon />} variant="contained" color="primary" >Edit Current Profile</Button>
+          <Grid container spacing={3} alignItems="center" justifyContent='space-between' style={{ paddingTop: '15px' }}>
+            <Grid item xs={6}>
+              <Paper style={{ padding: '6px 7px 6px 10px' }}>
+                <Typography>
+                  Profile: {this.state.currentProfile.name}
+                </Typography>
+              </Paper>
             </Grid>
             <Grid item>
-              {stopStartButton}
+              <Grid container spacing={3}>
+                <Grid item>
+                  <Button component={Link} to={{ pathname: '/editProfile', state: { profile: this.state.currentProfile } }} startIcon={<EditIcon />} variant="contained" color="primary" >Edit Current Profile</Button>
+                </Grid>
+                <Grid item>
+                  {stopStartButton}
+                </Grid>
+              </Grid>
             </Grid>
           </Grid>
         </Container>

@@ -14,20 +14,45 @@ import axios from 'axios';
 import StopIcon from '@material-ui/icons/Stop';
 import QRCode from "qrcode.react";
 import CloseIcon from '@material-ui/icons/Close';
+import Snackbar from '@material-ui/core/Snackbar';
+import MuiAlert from '@material-ui/lab/Alert';
 import { ListItem, Drawer, ListItemText, ListItemIcon, Divider, Dialog, DialogTitle, DialogContent } from '@material-ui/core';
 import { LinearProgress, Grid } from '@material-ui/core';
+import { withStyles } from '@material-ui/core/styles';
 
 class StatusBar extends Component {
-    constructor() {
-        super();
+    constructor(props) {
+        super(props);
         this.componentDidMount = this.componentDidMount.bind(this);
         this.componentWillUnmount = this.componentWillUnmount.bind(this);
         this.drawerChange = this.drawerChange.bind(this);
         this.stop = this.stop.bind(this);
         this.qrClicked = this.qrClicked.bind(this);
         this.qrClosed = this.qrClosed.bind(this);
-        this.state = { drawer: false, qrDialog: false, percentage: 0, temperature: 0, status: "Ready", address: ":", currentProfile: "" };
+        this.snackbarClosed = this.snackbarClosed.bind(this);
+        this.state = {
+            drawer: false,
+            qrDialog: false,
+            thermoDialog: false,
+            percentage: 0,
+            temperature: 0,
+            status: "Ready",
+            address: "",
+            currentProfile: "",
+            serverMessage: "",
+            serverMessageSeverity: "",
+            serverMessageSnackbar: false
+        };
     }
+
+    StopButton = withStyles({
+        root: {
+            backgroundColor: '#bf0000',
+            '&:hover': {
+                backgroundColor: '#870000'
+            }
+        }
+    })(Button);
 
     stop() {
         axios.post('/api/stop', { reason: "test" })
@@ -39,6 +64,16 @@ class StatusBar extends Component {
     }
 
     componentDidMount() {
+        fetch('/api/status')
+            .then(response => response.json())
+            .then(result => {
+                this.setState({
+                    address: result.address,
+                    percentage: result.status.percent,
+                    status: result.status.status,
+                    currentProfile: result.status.current_profile
+                });
+            });
         socket.on("status_update", (message) => {
             this.setState({
                 percentage: message.percent,
@@ -47,11 +82,15 @@ class StatusBar extends Component {
                 currentProfile: message.current_profile
             });
         });
-        fetch('/api/server_address')
-            .then(response => response.json())
-            .then(result => {
-                this.setState({ address: result["Ethernet"][0] });
+        socket.on("server_message", (message) => {
+            this.setState({
+                serverMessage: message.message,
+                serverMessageSeverity: message.severity,
             });
+            this.setState({
+                serverMessageSnackbar: true
+            });
+        });
     }
 
     drawerChange() {
@@ -64,6 +103,7 @@ class StatusBar extends Component {
 
     componentWillUnmount() {
         socket.off("status_update");
+        socket.off("server_message");
     }
 
     qrClicked() {
@@ -74,15 +114,32 @@ class StatusBar extends Component {
         this.setState({ qrDialog: false });
     }
 
+    snackbarClosed() {
+        this.setState({serverMessageSnackbar: false})
+    }
+
     render() {
+        var temperatureDisplay = this.state.temperature + "°C";
+        if (this.state.temperature === -1) {
+            temperatureDisplay = "Thermocouple Disconnected!";
+        } else if (this.state.temperature === -2) {
+            temperatureDisplay = "Thermocouple Error!";
+        }
         return (
             <>
+                <Snackbar anchorOrigin={{
+                    vertical: 'top',
+                    horizontal: 'right'}} open={this.state.serverMessageSnackbar} autoHideDuration={20000}>
+                    <MuiAlert elevation={6} variant="filled" severity={this.state.serverMessageSeverity} onClose={this.snackbarClosed}>
+                        {this.state.serverMessage}
+                    </MuiAlert>
+                </Snackbar>
                 <Dialog onClose={this.qrClosed} open={this.state.qrDialog} fullWidth={false} maxWidth={"sm"}>
                     <DialogTitle>
                         <Grid container justifyContent='center'>
                             <Grid item>
                                 <Typography variant='h5'>
-                                    http://{this.state.address}:3001
+                                    http://{this.state.address}
                                 </Typography>
                             </Grid>
                         </Grid>
@@ -90,7 +147,7 @@ class StatusBar extends Component {
                     <DialogContent>
                         <Grid container alignItems='center' direction='column'>
                             <Grid item>
-                                <QRCode value={"http://" + this.state.address + ":3001"} size={200} />
+                                <QRCode value={"http://" + this.state.address} size={200} />
                             </Grid>
                             <Grid item>
                                 <IconButton aria-label="close" onClick={this.qrClosed}>
@@ -111,7 +168,7 @@ class StatusBar extends Component {
                             </Grid>
                             <Grid item xs={2}>
                                 <Typography >
-                                    {this.state.temperature} °C
+                                    {temperatureDisplay}
                                 </Typography>
                             </Grid>
                             <Grid item>
@@ -127,13 +184,13 @@ class StatusBar extends Component {
 
                         </Grid>
                         <div style={{ marginLeft: 'auto' }}>
-                            {this.state.status === "Preheat" || this.state.status === "Running" &&
-                                <Button onClick={this.stop} startIcon={<StopIcon />} variant="contained" color="secondary">Stop</Button>
+                            {(this.state.status === "Preheat" || this.state.status === "Running") &&
+                                <this.StopButton onClick={this.stop} startIcon={<StopIcon />} variant="contained" color="secondary">Stop</this.StopButton>
                             }
                         </div>
 
                     </Toolbar>
-                    <LinearProgress variant="determinate" color='secondary' value={this.state.percentage} />
+                    <LinearProgress style={{height: 5}} variant="determinate" color='secondary' value={this.state.percentage} />
                 </AppBar>
 
                 <Drawer open={this.state.drawer} onClose={this.drawerChange} >

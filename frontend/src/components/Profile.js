@@ -4,6 +4,8 @@ import { Scatter } from 'react-chartjs-2';
 import { DraggableGraph } from './DraggableGraph';
 import { Input, Grid, IconButton, Typography } from '@material-ui/core';
 import Keyboard from 'react-simple-keyboard';
+import { withTheme } from '@material-ui/styles';
+import { alpha } from '@material-ui/core/styles/colorManipulator';
 
 class Profile extends Component {
     constructor(props) {
@@ -14,28 +16,15 @@ class Profile extends Component {
         this.state = {
             hitRadius: 1,
             pointRadius: 3,
-        };
+        };  
     }
-/*
-    shouldComponentUpdate(nextProps, nextState) {
-        return true;
-        console.log(this.props.profile.datapoints);
-        console.log(nextProps.profile.datapoints);
-        if (this.props.profile.datapoints !== nextProps.profile.datapoints ||
-            this.props.historicTemps !== nextProps.historicTemps ||
-            this.state.colors !== nextState.colors ||
-            this.state.hitRadius !== nextState.hitRadius) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-*/
+    
     componentDidMount() {
         if (this.props.draggable) {
             //hitradius over 25 ensures that touch devices can drag points
             this.setState({ hitRadius: 30, pointRadius: 8 });
         }
+        
     }
 
 
@@ -52,10 +41,16 @@ class Profile extends Component {
     }
 
     render() {
-        var tempColors = new Array(10).fill('rgba(42, 216, 255, 0.2)');
+        var gridColor = this.props.theme.palette.text.hint;
+        var primaryColor = this.props.theme.palette.primary.main;
+        var transparentPrimary = alpha(this.props.theme.palette.primary.main, 0.2);
+        var secondaryColor = this.props.theme.palette.secondary.main;
+        var transparentSecondary = alpha(this.props.theme.palette.secondary.main, 0.2);
+        var tempColors = new Array(10).fill(transparentPrimary);
         if (this.props.draggable) {
-            tempColors[this.props.activePoint] = '#001df5';
+            tempColors[this.props.activePoint] = secondaryColor;
         }
+
         return (
             <Scatter data={{
                 datasets: [
@@ -64,9 +59,10 @@ class Profile extends Component {
                         data: this.props.profile.datapoints,
                         pointBackgroundColor: tempColors,
                         showLine: true,
-                        backgroundColor: 'rgba(42, 216, 255, 0.2)',
-                        borderColor: 'rgba(42, 216, 255, 1)',
-                        borderWidth: 1,
+                        lineTension: 0.05,
+                        backgroundColor: transparentPrimary,
+                        borderColor: primaryColor,
+                        borderWidth: 3,
                         pointRadius: this.state.pointRadius,
                         hoverRadius: this.state.pointRadius + 3,
                         dragData: this.props.draggable,
@@ -75,11 +71,12 @@ class Profile extends Component {
                         label: 'Historic Temerature',
                         data: this.props.historicTemps,
                         showLine: true,
-                        backgroundColor: 'rgba(233, 236, 0, 0.2)',
-                        borderColor: 'rgba(233, 236, 0, 1)',
+                        lineTension: 0.05,
+                        backgroundColor: transparentSecondary,
+                        borderColor: secondaryColor,
                         borderWidth: 1,
-                        pointRadius: 1,
-                        hoverRadius: 2,
+                        pointRadius: 3,
+                        hoverRadius: 4,
                         dragData: false,
                         borderDash: [10, 5],
                         fill: 0,
@@ -87,6 +84,7 @@ class Profile extends Component {
                 ],
             }} options={{
                 maintainAspectRatio: true,
+                aspectRatio: 1.9,
                 responsive: true,
                 pointHitRadius: this.state.hitRadius,
                 animation: {
@@ -95,10 +93,10 @@ class Profile extends Component {
                 scales: {
                     y: {
                         grid: {
-                            color: '#595a5c'
+                            color: gridColor
                         },
                         ticks: {
-                            color: '#bfbfbf'
+                            color: gridColor
                         },
                         min: 0,
                         max: 300,
@@ -106,7 +104,7 @@ class Profile extends Component {
                         title: {
                             text: 'Temperature (°C)',
                             display: true,
-                            color: 'rgba(41, 216, 255, 0.7)',
+                            color: primaryColor,
                             font: {
                                 size: "20%",
                             },
@@ -114,10 +112,10 @@ class Profile extends Component {
                     },
                     x: {
                         grid: {
-                            color: '#595a5c'
+                            color: gridColor
                         },
                         ticks: {
-                            color: '#bfbfbf'
+                            color: gridColor
                         },
                         min: 0,
                         max: this.props.maxTime,
@@ -125,7 +123,7 @@ class Profile extends Component {
                         title: {
                             text: 'Time (Seconds)',
                             display: true,
-                            color: 'rgba(41, 216, 255, 0.7)',
+                            color: primaryColor,
                             font: {
                                 size: "20%",
                             },
@@ -163,6 +161,18 @@ class Profile extends Component {
                     },
                     title: {
                         display: false,
+                        color: 'white',
+                        fullsize: true,
+                        position: 'bottom',
+                        align: 'start',
+                        text: this.props.profile.name,
+                        padding: {
+                            top: 0,
+                            bottom: 0
+                        },
+                        font: {
+                            size: 30,
+                        }
                     },
                 },
             }} />
@@ -170,4 +180,4 @@ class Profile extends Component {
     }
 }
 //this.props.historicTemps
-export default Profile;
+export default withTheme(Profile);

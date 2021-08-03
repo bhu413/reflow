@@ -1,10 +1,10 @@
 {
    "onoff_mode": false,
-   "p": 4.5,
-   "i": 5.745,
-   "d": 6,
+   "p": 300,
+   "i": 0.075,
+   "d": 1360,
    "delta_t": 1,
-   "look_ahead": 0,
+   "look_ahead": 10,
    "preheat": true,
    "preheat_power": 0.7
 }
