@@ -7,4 +7,4 @@ npm start
 
 
 #start chrome in kiosk mode and go to correct ip address:port
-chromium-browser --kiosk --app=http://localhost:3001
+DISPLAY=:0.0 chromium-browser --kiosk --app=http://localhost:3001
