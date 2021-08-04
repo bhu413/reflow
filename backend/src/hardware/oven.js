@@ -395,26 +395,25 @@ module.exports = function (socketio, tempSensor) {
                         coolingFanOn(controlVariable * -1);
                         relayOff();
                     }
-                }
 
-
-                if (currentX === datapoints[datapoints.length - 2].x - lookAhead + offset) {
-                    if (lastPointIsCooling && coolingMessageSent == false) {
+                    if (currentX === datapoints[datapoints.length - 2].x - lookAhead + offset) {
+                        if (lastPointIsCooling && coolingMessageSent == false) {
+                            currentAction = "Cooling";
+                            sendMessage('info', 'Cooling started. Door can be opened to for faster cooling if needed.');
+                            coolingMessageSent = true;
+                        }
+                    } else if (currentX === datapoints[datapoints.length - 1].x - lookAhead + offset) {
                         currentAction = "Cooling";
-                        sendMessage('info', 'Cooling started. Door can be opened to for faster cooling if needed.');
-                        coolingMessageSent = true;
+                        if (!coolingMessageSent) {
+                            sendMessage('success', 'Profile completed. Door can be opened for faster cooling if needed.');
+                            coolingMessageSent = true;
+                        } else {
+                            sendMessage('success', 'Profile completed.');
+                        }
+                        module.stop(true);
+                        clearInterval(pidInterval);
                     }
-                } else if (currentX === datapoints[datapoints.length - 1].x - lookAhead + offset) {
-                    currentAction = "Cooling";
-                    if (!coolingMessageSent) {
-                        sendMessage('success', 'Profile completed. Door can be opened for faster cooling if needed.');
-                        coolingMessageSent = true;
-                    } else {
-                        sendMessage('success', 'Profile completed.');
-                    }
-                    module.stop(true);
-                    clearInterval(pidInterval);
-                }
+                }  
             }
             tempHistory.push({ x: currentX, y: temperature });
             percentDone = Math.min(Math.floor((currentX / datapoints[datapoints.length - 1].x) * 100), 100);
