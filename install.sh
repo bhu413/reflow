@@ -30,4 +30,4 @@ cp startup.service /etc/systemd/system/startup.service
 #rm startup.service
 
 chmod 644 /etc/systemd/system/startup.service
-systemctl enable /etc/systemd/system/startup.service
+sudo systemctl enable /etc/systemd/system/startup.service
