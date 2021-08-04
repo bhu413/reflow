@@ -117,6 +117,7 @@ class HardwareSettings extends Component {
                             <FormControl>
                                 <InputLabel>Relay GPIO</InputLabel>
                                 <Select value={this.state.relayPin} onChange={this.handleRelayChange}>
+                                    <MenuItem value={4}>4 (pin 7)</MenuItem>
                                     <MenuItem value={5}>5 (pin 29)</MenuItem>
                                     <MenuItem value={6}>6 (pin 31)</MenuItem>
                                     <MenuItem value={16}>16 (pin 36)</MenuItem>
@@ -134,6 +135,7 @@ class HardwareSettings extends Component {
                             <FormControl >
                                 <InputLabel>Cooling Fan GPIO</InputLabel>
                                 <Select value={this.state.coolingFanPin} onChange={this.handleCoolingFanChange}>
+                                    <MenuItem value={4}>4 (pin 7)</MenuItem>
                                     <MenuItem value={5}>5 (pin 29)</MenuItem>
                                     <MenuItem value={6}>6 (pin 31)</MenuItem>
                                     <MenuItem value={16}>16 (pin 36)</MenuItem>
