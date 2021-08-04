@@ -311,7 +311,7 @@ module.exports = function (socketio, tempSensor) {
             } else {
                 relayOn(preheatPower * 1000);
                 tempHistory = [];
-                tempHistory.push({ currentX: i, y: temperature });
+                tempHistory.push({ x: currentX, y: temperature });
             }
         }, 1000);
     }
