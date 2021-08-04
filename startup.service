@@ -3,6 +3,7 @@ Description=Startup Direct to Kiosk Mode systemd service.
 
 [Service]
 Type=simple
+User=root
 ExecStart=/bin/bash /home/startup.sh
 
 [Install]
