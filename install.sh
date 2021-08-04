@@ -10,6 +10,7 @@
 # sudo ./install.sh
 
 #install npm
+#
 curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -
 #install npmn and node.js 14.x
 sudo apt-get install -y nodejs
