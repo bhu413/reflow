@@ -30,9 +30,10 @@ path=$(pwd)
 #find out abd store who I am
 userMe=$(whoami)
 
+file=startup.sh
 
 #edit startup  to have path
-sed -i 's/7/$path/g' startup.sh
+sed -i "s/7/${path}/g" "$file"
 
 
 cp startup.sh /home/startup.sh
