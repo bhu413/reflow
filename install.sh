@@ -31,8 +31,15 @@ path=$(pwd)
 userMe=$(whoami)
 
 
+#edit startup  to have path
+sed -i 's/7/$path/g' startup.sh
+
+
 cp startup.sh /home/startup.sh
 #rm startup.sh
+
+
+#edit service to have user
 
 cp startup.service /etc/systemd/system/startup.service
 #rm startup.service

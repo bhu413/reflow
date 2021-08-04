@@ -1,7 +1,8 @@
 #!/bin/sh
 # R-Pi run on start script:
 # 
-cd "$(dirname "$(find / -type d -name backend | head -1)")"
+#cd "$(dirname "$(find / -type d -name backend | head -1)")"
+cd 7
 
 cd backend
 
