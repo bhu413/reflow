@@ -7,14 +7,8 @@ module.exports = function (app, express, socketio) {
     const appearanceSettings = require("../models/appearance_settings");
 
     const profile = require('../models/profile');
-    var oven;
-    if (process.platform !== "linux") {
-        tempSensor = require('../hardware/temp_sensor_sim');
-        oven = require('../hardware/oven_sim')(socketio, tempSensor);
-    } else {
-        tempSensor = require('../hardware/temp_sensor');
-        oven = require('../hardware/oven')(socketio, tempSensor);
-    }
+    const tempSensor = require('../hardware/temp_sensor');
+    const oven = require('../hardware/oven')(socketio, tempSensor);
 
     //Here we are configuring express to use body-parser as middle-ware.
     app.use(express.urlencoded({ extended: false }));
@@ -49,9 +43,8 @@ module.exports = function (app, express, socketio) {
 
 
     app.post("/api/reflow_profiles/load", (req, res) => {
-        if (oven.getStatus().status !== "Ready") {
+        if (oven.getStatus().status !== "Ready" && oven.getStatus().status !=="Cooling") {
             if (req.body.force_load) {
-                oven.stop(true);
                 oven.loadProfile(req.body.profile_name);
                 res.json({ status: 200, message: "loading profile" });
             } else {
@@ -130,7 +123,6 @@ module.exports = function (app, express, socketio) {
     app.post("/api/run", (req, res) => {
         if (oven.getStatus().status !== "Ready") {
             if (req.body.override) {
-                oven.stop()
                 oven.startProfile();
                 res.json({ status: 200, message: "running profile" });
             } else {

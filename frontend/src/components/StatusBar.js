@@ -15,6 +15,7 @@ import StopIcon from '@material-ui/icons/Stop';
 import QRCode from "qrcode.react";
 import CloseIcon from '@material-ui/icons/Close';
 import WhatshotIcon from '@material-ui/icons/Whatshot';
+import AcUnitIcon from '@material-ui/icons/AcUnit';
 import ToysIcon from '@material-ui/icons/Toys';
 import Snackbar from '@material-ui/core/Snackbar';
 import MuiAlert from '@material-ui/lab/Alert';
@@ -43,12 +44,14 @@ class StatusBar extends Component {
             currentProfile: "",
             serverMessage: "",
             serverMessageSeverity: "",
-            serverMessageSnackbar: false
+            serverMessageSnackbar: false,
+            relayOn: false,
+            coolingFanOn: false,
+            fanOn: false
         };
     }
 
     componentWillReceiveProps() {
-        return true;
     }
 
     StopButton = withStyles({
@@ -59,6 +62,25 @@ class StatusBar extends Component {
             }
         }
     })(Button);
+
+    RelayOn = withStyles({
+        root: {
+            fill: '#c70000',
+        }
+    })(WhatshotIcon);
+
+    CoolingOn = withStyles({
+        root: {
+            fill: '#009cc7',
+        }
+    })(AcUnitIcon);
+
+    ConvectionOn = withStyles({
+        root: {
+            fill: '#00ba16',
+        }
+    })(ToysIcon);
+    
 
     stop() {
         axios.post('/api/stop', { reason: "test" })
@@ -87,6 +109,39 @@ class StatusBar extends Component {
                 status: message.status,
                 currentProfile: message.current_profile
             });
+
+            if (message.relay > 0) {
+                this.setState({ relayOn: true });
+                if (message.relay < 1000) {
+                    setTimeout(() => {
+                        this.setState({ relayOn: false });
+                    }, message.relay);
+                }   
+            } else {
+                this.setState({ relayOn: false });
+            }
+
+            if (message.cooling_fan > 0) {
+                this.setState({ coolingFanOn: true });
+                if (message.cooling_fan < 1000) {
+                    setTimeout(() => {
+                        this.setState({ coolingFanOn: false });
+                    }, message.cooling_fan);
+                }
+            } else {
+                this.setState({ coolingFanOn: false });
+            }
+
+            if (message.fan > 0) {
+                this.setState({ fanOn: true });
+                if (message.fan < 1000) {
+                    setTimeout(() => {
+                        this.setState({ fanOn: false });
+                    }, message.fan);
+                } 
+            } else {
+                this.setState({ fanOn: false });
+            }
         });
         socket.on("server_message", (message) => {
             this.setState({
@@ -131,6 +186,22 @@ class StatusBar extends Component {
         } else if (this.state.temperature === -2) {
             temperatureDisplay = "Thermocouple Error!";
         }
+
+        var relayIcon = <WhatshotIcon />;
+        var coolingFanIcon = <AcUnitIcon />;
+        var fanIcon = <ToysIcon />;
+        if (this.state.relayOn) {
+            relayIcon = <this.RelayOn />;
+        }
+
+        if (this.state.coolingFanOn) {
+            coolingFanIcon = <this.CoolingOn />
+        }
+
+        if (this.state.fanOn) {
+            fanIcon = <this.ConvectionOn />
+        }
+
         return (
             <>
                 <Snackbar anchorOrigin={{
@@ -187,7 +258,19 @@ class StatusBar extends Component {
                                     {this.state.currentProfile.name}
                                 </Typography>
                             </Grid>
-
+                            <Grid item>
+                                <Grid container spacing={1}>
+                                    <Grid item>
+                                        {relayIcon}
+                                    </Grid>
+                                    <Grid item>
+                                        {coolingFanIcon}
+                                    </Grid>
+                                    <Grid item>
+                                        {fanIcon}
+                                    </Grid>
+                                </Grid>
+                            </Grid>
                         </Grid>
                         <div style={{ marginLeft: 'auto' }}>
                             {(this.state.status === "Preheat" || this.state.status === "Running") &&

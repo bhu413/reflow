@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/bhu413/reflow#readme",
   "dependencies": {
+    "detect-rpi": "^1.4.0",
     "express": "^4.17.1",
     "ip": "^1.1.5",
     "node-pid-controller": "^1.0.1",
