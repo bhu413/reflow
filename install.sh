@@ -23,11 +23,21 @@ npm install
 #copy startup script to constant location
 cd ..
 chmod +x startup.sh
+
+#find out and store where I am installed
+path=$(pwd)
+
+#find out abd store who I am
+userMe=$(whoami)
+
+
 cp startup.sh /home/startup.sh
 #rm startup.sh
 
 cp startup.service /etc/systemd/system/startup.service
 #rm startup.service
+
+
 
 chmod 644 /etc/systemd/system/startup.service
 sudo systemctl enable /etc/systemd/system/startup.service
