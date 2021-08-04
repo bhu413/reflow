@@ -371,6 +371,16 @@ module.exports = function (socketio, tempSensor) {
             temperature = tempSensor.getTemp();
             var offset = 0;
 
+            if (temperature < 0) {
+                module.stop(true);
+                if (temperatureSnapshot == -1) {
+                    sendMessage('error', 'Profile stopped. Thermocouple disconnected.');
+                } else if (temperatureSnapshot == -2) {
+                    sendMessage('error', 'Profile stopped. Thermocouples differ by more than 10 degrees.');
+                }
+                return -1;
+            }
+
             if (peakMode) {
                 if (offset > 180) {
                     module.stop(true);
