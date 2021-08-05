@@ -153,6 +153,7 @@ class HardwareSettings extends Component {
                             <FormControl>
                                 <InputLabel>Convection Fan GPIO</InputLabel>
                                 <Select value={this.state.fanPin} onChange={this.handleFanChange}>
+                                    <MenuItem value={4}>4 (pin 7)</MenuItem>
                                     <MenuItem value={5}>5 (pin 29)</MenuItem>
                                     <MenuItem value={6}>6 (pin 31)</MenuItem>
                                     <MenuItem value={16}>16 (pin 36)</MenuItem>

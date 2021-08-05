@@ -373,9 +373,9 @@ module.exports = function (socketio, tempSensor) {
 
             if (temperature < 0) {
                 module.stop(true);
-                if (temperatureSnapshot == -1) {
+                if (temperature == -1) {
                     sendMessage('error', 'Profile stopped. Thermocouple disconnected.');
-                } else if (temperatureSnapshot == -2) {
+                } else if (temperature == -2) {
                     sendMessage('error', 'Profile stopped. Thermocouples differ by more than 10 degrees.');
                 }
                 return -1;
