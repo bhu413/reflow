@@ -427,7 +427,7 @@ module.exports = function (socketio, tempSensor) {
         relayOff();
 
         var temperature = tempSensor.getTemp();
-        if (temperature > hardwareSettings.getProperty('fan_turnoff_temp')) {
+        if (temperature > hardwareSettings.getProperty('fan_turnoff_temp') || temperature < 0) {
             coolingFanOn();
             fanOn();
             coolingInterval = setInterval(function () {
