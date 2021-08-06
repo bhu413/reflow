@@ -456,13 +456,25 @@ module.exports = function (socketio, tempSensor) {
         updatePidSettings();
         module.stop();
         updateGpio();
-        fanOn();
         currentX = 0;
         tempHistory = [];
         datapoints = currentProfile.datapoints;
 
-        //fast forward in profile to point with current temperature
         var temperature = tempSensor.getTemp();
+        if (temperature < 0) {
+            module.stop();
+            coolDown(false);
+            if (temperature == -1) {
+                sendMessage('error', 'Unable to start. Thermocouple disconnected.');
+            } else if (temperature == -2) {
+                sendMessage('error', 'Unable to start. Thermocouples differ by more than 20 degrees.');
+            }
+            return -1;
+        }
+
+        fanOn();
+
+        //fast forward in profile to point with current temperature
         while (temperature > getTemperatureAtPoint(currentX)) {
             if (currentX < datapoints[datapoints.length - 1].x) {
                 currentX++;
