@@ -16,6 +16,9 @@ module.exports.saveSettings = function (settings) {
     if (settings.hasOwnProperty('fan_turnoff_temp')) {
         currentSettings.fan_turnoff_temp = parseInt(settings.fan_turnoff_temp, 10);
     }
+    if (settings.hasOwnProperty('thermocouple_offset')) {
+        currentSettings.thermocouple_offset = parseInt(settings.thermocouple_offset, 10);
+    }
 
     fs.writeFileSync(settingsDir + '/hardware_settings.json', JSON.stringify(currentSettings, null, 3));
 }

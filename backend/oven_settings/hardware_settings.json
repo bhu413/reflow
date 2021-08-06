@@ -4,5 +4,6 @@
    "relay_pin": 27,
    "fan_pin": 22,
    "cooling_fan_pin": 16,
-   "fan_turnoff_temp": 33
+   "fan_turnoff_temp": 33,
+   "thermocouple_offset": 0
 }

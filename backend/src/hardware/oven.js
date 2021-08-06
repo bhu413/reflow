@@ -232,21 +232,21 @@ module.exports = function (socketio, tempSensor) {
                     duration = 980
                 }
                 fanStatus = duration;
-                console.log("fan on (gpio" + coolingFan + ")");
+                console.log("fan on (gpio" + fan + ")");
                 fanTimeout = setTimeout(function () {
                     fanStatus = 0;
-                    console.log("fan off (gpio" + coolingFan + ")");
+                    console.log("fan off (gpio" + fan + ")");
                 }, duration);
             } else {
                 fanStatus = 1000;
-                console.log("fan on (gpio" + coolingFan + ")");
+                console.log("fan on (gpio" + fan + ")");
             }
         };
 
         fanOff = function () {
             fanStatus = 0;
             clearTimeout(fanTimeout);
-            console.log("fan off (gpio" + coolingFan + ")");
+            console.log("fan off (gpio" + fan + ")");
         };
 
     }
@@ -431,33 +431,39 @@ module.exports = function (socketio, tempSensor) {
         }, 1000);
     }
 
-    function coolDown() {
+    function coolDown(shouldRecord = true) {
         var timeElapsed = 0;
         currentAction = "Cooling";
         clearInterval(preheatInterval);
         clearInterval(pidInterval);
         relayOff();
-        coolingFanOn();
-        fanOn();
-        coolingInterval = setInterval(function () {
-            var temperature = tempSensor.getTemp();
-            if ((temperature <= hardwareSettings.getProperty('fan_turnoff_temp') && temperature >= 0) || timeElapsed > 1800) {
-                coolingFanOff();
-                fanOff();
-                currentAction = "Ready";
-                clearInterval(coolingInterval);
-            } else {
-                tempHistory.push({ x: currentX, y: temperature });
-                currentX++;
-                timeElapsed++;
-            }
-        }, 1000);
-        
+
+        var temperature = tempSensor.getTemp();
+        if (temperature > hardwareSettings.getProperty('fan_turnoff_temp')) {
+            coolingFanOn();
+            fanOn();
+            coolingInterval = setInterval(function () {
+                temperature = tempSensor.getTemp();
+                if ((temperature <= hardwareSettings.getProperty('fan_turnoff_temp') && temperature >= 0) || timeElapsed > 1800) {
+                    coolingFanOff();
+                    fanOff();
+                    currentAction = "Ready";
+                    clearInterval(coolingInterval);
+                } else {
+                    if (shouldRecord) {
+                        tempHistory.push({ x: currentX, y: temperature });
+                        currentX++;
+                    }
+                    timeElapsed++;
+                }
+            }, 1000);
+        } 
     }
 
     module.startProfile = function () {
         updatePidSettings();
         module.stop();
+        updateGpio();
         fanOn();
         currentX = 0;
         tempHistory = [];
@@ -504,10 +510,12 @@ module.exports = function (socketio, tempSensor) {
     }
 
     module.loadProfile = function (profileName) {
-        module.stop(true);
+        module.stop();
+        coolDown(false);
         currentProfile = profile.getProfile(profileName);
         tempHistory = [];
         percentDone = 0;
+        currentX = 0;
     }
 
 
@@ -516,9 +524,6 @@ module.exports = function (socketio, tempSensor) {
 
     //load a profile when initalizing 
     module.loadProfile('');
-
-    module.stop();
-
 
 
     //if anything goes wrong, stop everything in the oven

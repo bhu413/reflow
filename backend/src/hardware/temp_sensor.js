@@ -1,9 +1,13 @@
 const isPi = require('detect-rpi');
+const hardwareSettings = require("../models/hardware_settings");
+
 var spi = null;
 var readSpi;
 var updateTemp;
 
 var currentTemp = 0;
+var sensor1temp = 0;
+var sensor2temp = 0;
 // An SPI message is an array of one or more read+write transfers
 var message = [{
     //max6675 has 16 bits to be read so we make a buffer of 2 bytes (8 bits = 1 byte)
@@ -46,33 +50,44 @@ if (isPi()) {
     };
 
     updateTemp = function () {
-        var celcius1 = readSpi(0);
-        var celcius2 = readSpi(1);
+        sensor1temp = readSpi(0);
+        sensor2temp = readSpi(1);
 
-        if (celcius1 == -1 && celcius2 == -1) {
+        if (sensor1temp == -1 && sensor2temp == -1) {
             currentTemp = -1;
-        } else if (celcius1 == -1) {
-            currentTemp = celcius2;
-        } else if (celcius2 == -1) {
-            currentTemp = celcius1;
+        } else if (sensor1temp == -1) {
+            currentTemp = sensor2temp;
+        } else if (sensor2temp == -1) {
+            currentTemp = sensor1temp;
         } else {
-            if (Math.abs(celcius1 - celcius2) >= 10) {
+            if (Math.abs(sensor1temp - sensor2temp) >= 20) {
                 currentTemp = -2;
             } else {
-                currentTemp = (celcius1 + celcius2) / 2;
+                currentTemp = (sensor1temp + sensor2temp) / 2;
             }
         }
     };
 
 } else {
     updateTemp = function () {
-        currentTemp = Math.floor(Math.random() * (200 - 30) + 30);
+        sensor1temp = Math.floor(Math.random() * (200 - 30) + 30);
+        sensor2temp = sensor1temp;
+        currentTemp = sensor1temp;
     }
 }
     
 
 module.exports.getTemp = function () {
-    return currentTemp;
+    var offset = hardwareSettings.getProperty("thermocouple_offset");
+    return currentTemp + offset;
+}
+
+module.exports.getAllTemps = function () {
+    var allTemps = {};
+    allTemps.sensor_1 = sensor1temp;
+    allTemps.sensor_2 = sensor2temp;
+    allTemps.current = module.exports.getTemp();
+    return allTemps;
 }
 
 //update temp every 1 second

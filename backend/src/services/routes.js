@@ -27,6 +27,10 @@ module.exports = function (app, express, socketio) {
         res.json({temperature: tempSensor.getTemp()});
     });
 
+    app.get("/api/all_temperatures", (req, res) => {
+        res.json(tempSensor.getAllTemps());
+    });
+
     app.get("/api/status", (req, res) => {
         res.json({ status: oven.getStatus(), address: ip.address() + ":" + networkSettings.getProperty('port')});
     });

@@ -226,7 +226,7 @@ class Home extends Component {
           </Grid>
 
           <Grid container spacing={3} alignItems="center" justifyContent='space-between' style={{ paddingTop: '15px' }}>
-            <Grid item xs={6}>
+            <Grid item xs={5}>
               <Paper style={{ padding: '6px 7px 6px 10px' }}>
                 <Typography>
                   Profile: {this.state.currentProfile.name}

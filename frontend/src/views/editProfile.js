@@ -192,7 +192,6 @@ class EditProfile extends Component {
   }
 
   drag(e, datasetIndex, index, value) {
-    //enabling this makes things laggy. I think its good enough without it
     var tempProfile = this.state.newProfile;
     tempProfile.datapoints[index] = value;
     this.setState({ currentX: value.x, currentY: value.y, newProfile: tempProfile });
@@ -485,7 +484,7 @@ class EditProfile extends Component {
         
         <Container maxWidth={false}>
           <Grid container spacing={3} alignItems="center" justifyContent="space-between" style={{ paddingTop: '15px' }}>
-            <Grid item xs={6}>
+            <Grid item xs={5}>
               <Paper style={{ padding: '6px 7px 6px 10px' }}>
                 <Typography>
                   Profile: {this.state.newProfile.name}
