@@ -26,7 +26,8 @@ class PidSettings extends Component {
         fetch('/api/settings/pid')
             .then(response => response.json())
             .then(result => {
-                this.setState({ p: result.p, i: result.i, d: result.d, lookAhead: result.look_ahead, preheat: result.preheat, preheatPower: result.preheat_power });
+                this.setState({ p: result.p, i: result.i, d: result.d, lookAhead: result.look_ahead, 
+                    preheat: result.preheat, preheatPower: result.preheat_power, alwaysHitPeak: result.always_hit_peak });
             });
     }
 
