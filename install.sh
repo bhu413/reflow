@@ -33,7 +33,7 @@ userMe=$(whoami)
 file=startup.sh
 
 #edit startup  to have path
-sed -i "s/7/${path}/g" "$file"
+#sed -i "s/7/${path}/g" "$file"
 
 
 cp startup.sh /home/startup.sh
