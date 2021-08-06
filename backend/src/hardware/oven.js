@@ -354,21 +354,9 @@ module.exports = function (socketio, tempSensor) {
         var peak = findPeak();
         var lastPointIsCooling = isLastPointCooling();
         var datapoints = currentProfile.datapoints;
-        var temperature = tempSensor.getTemp();
-
-        //fast forward in profile to point with current temperature
-        while (temperature > getTemperatureAtPoint(currentX)) {
-            if (currentX < datapoints[datapoints.length - 1].x) {
-                currentX++;
-            } else {
-                sendMessage('error', 'Current temperature is above all points');
-                module.stop(true);
-                return -1;
-            }
-        }
 
         pidInterval = setInterval(function () {
-            temperature = tempSensor.getTemp();
+            var temperature = tempSensor.getTemp();
             var offset = 0;
 
             if (temperature < 0) {
@@ -376,15 +364,15 @@ module.exports = function (socketio, tempSensor) {
                 if (temperature == -1) {
                     sendMessage('error', 'Profile stopped. Thermocouple disconnected.');
                 } else if (temperature == -2) {
-                    sendMessage('error', 'Profile stopped. Thermocouples differ by more than 10 degrees.');
+                    sendMessage('error', 'Profile stopped. Thermocouples differ by more than 20 degrees.');
                 }
                 return -1;
             }
 
             if (peakMode) {
-                if (offset > 180) {
+                if (offset > 300) {
                     module.stop(true);
-                    sendMessage('error', 'Could not reach peak after trying for 3 minutes');
+                    sendMessage('error', 'Could not reach peak after attempting for 5 minutes');
                     return -1;
                 }
                 getToPeak();
@@ -393,8 +381,8 @@ module.exports = function (socketio, tempSensor) {
                 if (currentX + lookAhead === peak.x) {
                     if (temperature < peak.y - 2 && alwaysHitPeak) {
                         peakMode = true;
+                        getToPeak();
                     }
-
                 } else {
                     ctr.setTarget(getTemperatureAtPoint(currentX + lookAhead - offset));
                     var controlVariable = ctr.update(temperature);
@@ -457,7 +445,11 @@ module.exports = function (socketio, tempSensor) {
                     timeElapsed++;
                 }
             }, 1000);
-        } 
+        } else {
+            coolingFanOff();
+            fanOff();
+            currentAction = "Ready";
+        }
     }
 
     module.startProfile = function () {
@@ -467,6 +459,21 @@ module.exports = function (socketio, tempSensor) {
         fanOn();
         currentX = 0;
         tempHistory = [];
+        datapoints = currentProfile.datapoints;
+
+        //fast forward in profile to point with current temperature
+        var temperature = tempSensor.getTemp();
+        while (temperature > getTemperatureAtPoint(currentX)) {
+            if (currentX < datapoints[datapoints.length - 1].x) {
+                currentX++;
+            } else {
+                sendMessage('error', 'Current temperature is above all points');
+                module.stop(true);
+                return -1;
+            }
+        }
+
+        sendMessage('success', currentProfile.name + ' started');
         ctr = new Controller(proportional, integral, derivative, dt); // k_p, k_i, k_d, dt
         if (preheat) {
             runPreheat();

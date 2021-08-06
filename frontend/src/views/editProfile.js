@@ -395,24 +395,25 @@ class EditProfile extends Component {
             <Grid item sm={2} lg={2}>
               <Grid container spacing={1} direction="column"  style={{ paddingTop: '20px' }} >
                 <Grid item align='center'>
-                  <Typography variant='subtitle1'>Current Point: {this.state.currentPoint + 1}</Typography>
+                  <Typography variant='h5'>
+                    ({this.state.currentX}, {this.state.currentY})
+                  </Typography>
                 </Grid>
 
                 <Grid item>
                   <Paper>
                     <Grid item align='center'>
-                      <Typography variant='subtitle1'>Edit Point</Typography>
                     </Grid>
                     <Grid item align='center'>
                       <IconButton color='primary' size='small' onClick={this.addY}><ArrowUpwardIcon /></IconButton>
                     </Grid>
                     <Grid item>
-                      <Grid container justifyContent='space-between' wrap='nowrap'>
+                      <Grid container justifyContent='space-evenly' wrap='nowrap'>
                         <Grid item>
                           <IconButton color='primary' size='small' onClick={this.subtractX}><ArrowBackIcon /></IconButton>
                         </Grid>
-                        <Grid item align='center' style={{minWidth: 90}}>
-                          <Typography variant='h6'  noWrap={true}>{this.state.currentX}, {this.state.currentY}</Typography>
+                        <Grid item align='center' style={{minWidth: 10}}>
+                          
                         </Grid>
                         <Grid item>
                           <IconButton color='primary' size='small' onClick={this.addX}><ArrowForwardIcon /></IconButton>
@@ -431,7 +432,7 @@ class EditProfile extends Component {
                     <Grid item align='center'>
                       <Typography variant='subtitle1'>Nodes</Typography>
                     </Grid>
-                    <Grid container spacing={1} justifyContent='space-between'>
+                    <Grid container spacing={1} justifyContent='space-evenly'>
                       <Grid item>
                         <IconButton color='primary' size='small' onClick={this.subtractNode}><RemoveIcon /></IconButton>
                       </Grid>
@@ -450,7 +451,7 @@ class EditProfile extends Component {
                     <Grid item align='center'>
                       <Typography variant='subtitle1' >Max Time</Typography>
                     </Grid>
-                    <Grid container spacing={1} justifyContent='space-between'>
+                    <Grid container spacing={1} justifyContent='space-evenly'>
                       <Grid item>
                         <IconButton color='primary' size='small' onClick={this.subtractTime}><RemoveIcon /></IconButton>
                       </Grid>

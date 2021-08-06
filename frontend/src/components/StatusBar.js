@@ -19,9 +19,11 @@ import AcUnitIcon from '@material-ui/icons/AcUnit';
 import ToysIcon from '@material-ui/icons/Toys';
 import Snackbar from '@material-ui/core/Snackbar';
 import MuiAlert from '@material-ui/lab/Alert';
+import WifiTetheringIcon from '@material-ui/icons/WifiTethering';
 import { ListItem, Drawer, ListItemText, ListItemIcon, Divider, Dialog, DialogTitle, DialogContent } from '@material-ui/core';
 import { LinearProgress, Grid } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
+import { withRouter } from "react-router-dom";
 
 class StatusBar extends Component {
     constructor(props) {
@@ -49,9 +51,6 @@ class StatusBar extends Component {
             coolingFanOn: false,
             fanOn: false
         };
-    }
-
-    componentWillReceiveProps() {
     }
 
     StopButton = withStyles({
@@ -206,7 +205,7 @@ class StatusBar extends Component {
             <>
                 <Snackbar anchorOrigin={{
                     vertical: 'top',
-                    horizontal: 'right'}} open={this.state.serverMessageSnackbar} autoHideDuration={20000} onClose={this.snackbarClosed}>
+                    horizontal: 'right'}} open={this.state.serverMessageSnackbar} autoHideDuration={10000} onClose={this.snackbarClosed}>
                     <MuiAlert elevation={6} variant="filled" severity={this.state.serverMessageSeverity} onClose={this.snackbarClosed}>
                         {this.state.serverMessage}
                     </MuiAlert>
@@ -234,28 +233,21 @@ class StatusBar extends Component {
                         </Grid>
                     </DialogContent>
                 </Dialog>
-                <AppBar position="static">
-                    <Toolbar>
+                <AppBar position="static" >
+                    <Toolbar >
                         <IconButton edge="start" color="inherit" aria-label="menu" onClick={this.drawerChange}>
                             <MenuIcon />
                         </IconButton>
-                        <Grid container spacing={5} style={{paddingLeft: 20}}>
-                            <Grid item>
-                                <QRCode style={{ cursor: 'pointer' }} onClick={this.qrClicked} value={"http://" + this.state.address + ":3001"} size={25} />
-                            </Grid>
-                            <Grid item xs={2}>
-                                <Typography >
+                        <IconButton component={Link} to='/'><HomeIcon /></IconButton>
+                        <Grid container spacing={5} style={{ paddingLeft: 20, paddingTop: 5 }}>
+                            <Grid item style={{ minWidth: 100 }}>
+                                <Typography align='center'>
                                     {temperatureDisplay}
                                 </Typography>
                             </Grid>
-                            <Grid item>
-                                <Typography  >
+                            <Grid item style={{ minWidth: 100 }}>
+                                <Typography align='center' >
                                     {this.state.status}
-                                </Typography>
-                            </Grid>
-                            <Grid item>
-                                <Typography  >
-                                    {this.state.currentProfile.name}
                                 </Typography>
                             </Grid>
                             <Grid item>
@@ -270,6 +262,11 @@ class StatusBar extends Component {
                                         {fanIcon}
                                     </Grid>
                                 </Grid>
+                            </Grid>
+                            <Grid item>
+                                <Typography align='center' style={{fontWeight: 'bold'}} >
+                                    {this.state.currentProfile.name}
+                                </Typography>
                             </Grid>
                         </Grid>
                         <div style={{ marginLeft: 'auto' }}>
@@ -299,11 +296,15 @@ class StatusBar extends Component {
                         <ListItemIcon><SettingsIcon /></ListItemIcon>
                         <ListItemText>Settings</ListItemText>
                     </ListItem>
+                    <ListItem button key={"Address"} onClick={this.qrClicked}>
+                        <ListItemIcon><WifiTetheringIcon /></ListItemIcon>
+                        <ListItemText>Server Address</ListItemText>
+                    </ListItem>
                 </Drawer>
             </>
         );
     }
 }
 
-export default StatusBar;
+export default withRouter(StatusBar);
 

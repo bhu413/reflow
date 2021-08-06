@@ -1,7 +1,7 @@
 import { React, Component } from 'react';
 import Profile from '../components/Profile';
 import { Button, Grid, Dialog, DialogTitle, DialogContent, DialogActions, IconButton, Container } from '@material-ui/core';
-import { DataGrid } from '@material-ui/data-grid'
+import { DataGrid, gridColumnLookupSelector } from '@material-ui/data-grid'
 import { Link, withRouter } from "react-router-dom";
 import axios from 'axios';
 import CancelIcon from '@material-ui/icons/Cancel';
@@ -72,6 +72,13 @@ class ProfileList extends Component {
       type: 'dateTime',
       width: 200,
       editable: false,
+      valueFormatter: (params) => {
+        if (params.value === 0) {
+          return 'never';
+        } else {
+          return new Date(params.value).toLocaleString();
+        }
+      }
     },
     {
       field: 'date_created',
@@ -79,6 +86,13 @@ class ProfileList extends Component {
       type: 'dateTime',
       width: 200,
       editable: false,
+      valueFormatter: (params) => {
+        if (params.value === 0) {
+          return 'n/a';
+        } else {
+          return new Date(params.value).toLocaleString();
+        }
+      }
     }
   ];
 
@@ -110,12 +124,6 @@ class ProfileList extends Component {
       .then(result => {
         result.forEach(element => {
           element['id'] = element.name;
-          element['date_created'] = new Date(element.date_created).toLocaleString();
-          if (element.last_run === 0) {
-            element['last_run'] = "never";
-          } else {
-            element['last_run'] = new Date(element.last_run).toLocaleString();
-          }
         });
         this.setState({ profiles: result });
       });
@@ -151,8 +159,6 @@ class ProfileList extends Component {
 
   downloadProfile() {
     var downloadableProfile = this.state.activeItem;
-    downloadableProfile.date_created = Date.now();
-    downloadableProfile.last_run = 0;
     delete downloadableProfile['id'];
     var blob = new Blob([JSON.stringify(downloadableProfile, null, 3)], { type: "text/plain;charset=utf-8" });
     FileSaver.saveAs(blob, downloadableProfile.name + ".json");
