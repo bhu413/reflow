@@ -11,7 +11,16 @@ import axios from 'axios';
 class PidSettings extends Component {
     constructor() {
         super();
-        this.state = { p: 0, i: 0, d: 0, lookAhead: 0, preheat: false, preheatPower: 0, alwaysHitPeak: false, inputChanged: false };
+        this.state = { 
+            p: 0, 
+            i: 0, 
+            d: 0, 
+            lookAhead: 0, 
+            preheat: false, 
+            preheatPower: 0, 
+            alwaysHitPeak: false, 
+            inputChanged: false 
+        };
         this.save = this.save.bind(this);
         this.handlePChange = this.handlePChange.bind(this);
         this.handleIChange = this.handleIChange.bind(this);
@@ -26,8 +35,15 @@ class PidSettings extends Component {
         fetch('/api/settings/pid')
             .then(response => response.json())
             .then(result => {
-                this.setState({ p: result.p, i: result.i, d: result.d, lookAhead: result.look_ahead, 
-                    preheat: result.preheat, preheatPower: result.preheat_power, alwaysHitPeak: result.always_hit_peak });
+                this.setState({ 
+                    p: result.p, 
+                    i: result.i, 
+                    d: result.d, 
+                    lookAhead: result.look_ahead, 
+                    preheat: result.preheat, 
+                    preheatPower: result.preheat_power, 
+                    alwaysHitPeak: result.always_hit_peak 
+                });
             });
     }
 
