@@ -179,7 +179,7 @@ class App extends Component {
     return (
       <ThemeProvider theme={theme}>
         <IdleTimer
-          timeout={600000}
+          timeout={2100000}
           onIdle={this.appIdle}
           debounce={250}
         />
