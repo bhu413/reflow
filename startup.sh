@@ -9,7 +9,7 @@ cd backend
 # invert display
 DISPLAY=:0.0 xrandr --output HDMI-1 --rotate inverted
 
-#to invert touchscreen input
+# to invert touchscreen input
 # cd /usr/share/X11/xorg.conf.d/
 # open config file libinput or evdev possibly, 
 # whatever file in this location which has below section
