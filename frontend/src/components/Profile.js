@@ -1,9 +1,8 @@
 import React, { Component } from "react";
 import { Scatter } from 'react-chartjs-2';
-//import * as zoom from 'chartjs-plugin-zoom'
-import { DraggableGraph } from './DraggableGraph';
-import { Input, Grid, IconButton, Typography } from '@material-ui/core';
-import Keyboard from 'react-simple-keyboard';
+//import { DraggableGraph } from './DraggableGraph';
+import 'chartjs-plugin-dragdata';
+//import Keyboard from 'react-simple-keyboard';
 import { withTheme } from '@material-ui/styles';
 import { alpha } from '@material-ui/core/styles/colorManipulator';
 
@@ -14,7 +13,7 @@ class Profile extends Component {
         this.drag = this.drag.bind(this);
         this.dragEnd = this.dragEnd.bind(this);
         this.state = {
-            hitRadius: 1,
+            hitRadius: 5,
             pointRadius: 3,
         };  
     }
@@ -24,7 +23,6 @@ class Profile extends Component {
             //hitradius over 25 ensures that touch devices can drag points
             this.setState({ hitRadius: 30, pointRadius: 8 });
         }
-        
     }
 
 
@@ -68,6 +66,7 @@ class Profile extends Component {
                         borderColor: primaryColor,
                         borderWidth: 3,
                         pointRadius: this.state.pointRadius,
+                        pointHitRadius: this.state.hitRadius,
                         hoverRadius: this.state.pointRadius + 3,
                         dragData: this.props.draggable,
                     },
@@ -90,7 +89,6 @@ class Profile extends Component {
                 maintainAspectRatio: true,
                 aspectRatio: 1.9,
                 responsive: true,
-                pointHitRadius: this.state.hitRadius,
                 animation: {
                     duration: 0,
                 },
@@ -100,17 +98,17 @@ class Profile extends Component {
                             color: gridColor
                         },
                         ticks: {
-                            color: gridColor
+                            color: gridColor,
+                            stepSize: 25
                         },
                         min: 0,
                         max: 300,
-                        stepSize: 1,
                         title: {
                             text: 'Temperature (°C)',
                             display: true,
-                            color: primaryColor,
+                            color: gridColor,
                             font: {
-                                size: "20%",
+                                size: "15%",
                             },
                         },
                     },
@@ -119,17 +117,17 @@ class Profile extends Component {
                             color: gridColor
                         },
                         ticks: {
-                            color: gridColor
+                            color: gridColor,
+                            stepSize: 25
                         },
                         min: 0,
                         max: this.props.maxTime,
-                        stepSize: 1,
                         title: {
                             text: 'Time (Seconds)',
                             display: true,
-                            color: primaryColor,
+                            color: gridColor,
                             font: {
-                                size: "20%",
+                                size: "15%",
                             },
                         },
                     },

@@ -1,6 +1,8 @@
 module.exports = function (app, express, socketio) {
 
     const ip = require("ip");
+    const securitySettings = require("../../oven_settings/security.json");
+    const crypto = require("crypto");
     const networkSettings = require("../models/network_settings");
     const pidSettings = require("../models/pid_settings");
     const hardwareSettings = require("../models/hardware_settings");
@@ -14,10 +16,35 @@ module.exports = function (app, express, socketio) {
     app.use(express.urlencoded({ extended: false }));
     app.use(express.json());
 
+    const hashedPassword = crypto.createHash('sha256').update(Buffer.from(securitySettings.screen_password)).digest('hex');
+
+    if (!networkSettings.getProperty('remote_connections')) {
+        // Custom Middleware
+        app.use((req, res, next) => {
+            let validIps = ['::1', '127.0.0.1', 'localhost']; // Put your IP whitelist in this array
+
+            if (validIps.includes(req.connection.remoteAddress)) {
+                next();
+            }
+            else {
+                // Invalid ip
+                res.status(403).send("403 forbidden: Remote connections disabled");
+            }
+        });
+    }
+
     //setting all of our endpoints
 
     // Have Node serve the files for our built React app
+    
+    
     app.use("/", express.static("../frontend/build"));
+
+    app.use("/settings", express.static("../frontend/build"));
+
+    app.use("/profileList", express.static("../frontend/build"));
+
+    app.use("/editProfile", express.static("../frontend/build"));
 
     app.get("/api/test", (req, res) => {
         res.json({ message: "Hello from server!" });
@@ -40,7 +67,7 @@ module.exports = function (app, express, socketio) {
     });
 
     app.post("/api/send_message", (req, res) => {
-        var ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+        var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
         socketio.emit("server_message", { message: "[" + ip + "] " + req.body.message, severity: 'info'});
         res.json({ status: 200, message: "message sent" });
     });
@@ -50,6 +77,7 @@ module.exports = function (app, express, socketio) {
         if (oven.getStatus().status !== "Ready" && oven.getStatus().status !=="Cooling") {
             if (req.body.force_load) {
                 oven.loadProfile(req.body.profile_name);
+                profile.updateLastRun(req.body.profile_name);
                 res.json({ status: 200, message: "loading profile" });
             } else {
                 res.json({ status: 409, message: "oven currently running" });
@@ -111,6 +139,15 @@ module.exports = function (app, express, socketio) {
         res.json({ status: 200, message: "Saved successfully" });
     });
 
+
+    app.post("/api/check_password", (req, res) => {
+        if (hashedPassword === req.body.hashed) {
+            res.json({ status: 200, message: "valid password" });
+        } else {
+            res.json({ status: 403, message: "invalid password" });
+        }
+        
+    });
     //statically serve files from folder
     app.use('/api/reflow_profiles', express.static('reflow_profiles'));
 
@@ -143,8 +180,6 @@ module.exports = function (app, express, socketio) {
         oven.stop(true);
         res.json({ status: 200, message: "stopped" });
     });
-
-    app.use("*", express.static("../frontend/build"));
 
     var interval = setInterval(() => {
         socketio.emit("status_update", oven.getStatus());

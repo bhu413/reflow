@@ -7,10 +7,6 @@ import HardwareSettings from "../components/HardwareSettings";
 import AppearanceSettings from '../components/AppearanceSettings';
 
 class Settings extends Component {
-    constructor(props) {
-        super(props);
-    }
-
 
     render() {
         return (

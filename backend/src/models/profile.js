@@ -1,6 +1,6 @@
 const fs = require('fs');
 const profileDir = './reflow_profiles';
-const MAX_PROFILES = 20;
+const MAX_PROFILES = 50;
 
 
 var profilesList = [];
@@ -49,8 +49,38 @@ module.exports.getAllProfiles = function () {
 }
 
 module.exports.getProfile = function (profileName) {
-    if (profileName == '') {
-        return JSON.parse(fs.readFileSync('./default_reflow_profiles/flat.json'));
+    if (profileName === '') {
+        return {
+            name: "flat",
+            date_created: Date.now(),
+            last_run: 0,
+            datapoints: [
+                {
+                    x: 0,
+                    y: 30
+                },
+                {
+                    x: 75,
+                    y: 30
+                },
+                {
+                    x: 150,
+                    y: 30
+                },
+                {
+                    x: 225,
+                    y: 30
+                },
+                {
+                    x: 300,
+                    y: 30
+                },
+                {
+                    x: 375,
+                    y: 30
+                }
+            ]
+        };
     }
     return JSON.parse(fs.readFileSync(profileDir + '/' + profileName + '.json'));
 }

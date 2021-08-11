@@ -1,7 +1,7 @@
 import { React, Component } from 'react';
 import Profile from '../components/Profile';
 import { Button, Grid, Dialog, DialogTitle, DialogContent, DialogActions, IconButton, Container } from '@material-ui/core';
-import { DataGrid, gridColumnLookupSelector } from '@material-ui/data-grid'
+import { DataGrid } from '@material-ui/data-grid'
 import { Link, withRouter } from "react-router-dom";
 import axios from 'axios';
 import CancelIcon from '@material-ui/icons/Cancel';
@@ -14,6 +14,7 @@ import CloseIcon from '@material-ui/icons/Close';
 import StatusBar from '../components/StatusBar';
 import DeleteIcon from '@material-ui/icons/Delete';
 import FileSaver from 'file-saver';
+import NoteAddIcon from '@material-ui/icons/NoteAdd';
 
 class ProfileList extends Component {
   constructor() {
@@ -194,13 +195,19 @@ class ProfileList extends Component {
         <StatusBar />
         <Dialog onClose={this.handleDialogClose} open={this.state.dialog} fullWidth={true}>
           <DialogTitle>
-            {this.state.activeItem.name}
-            <IconButton aria-label="close" onClick={this.handleDialogClose}>
-              <CloseIcon />
-            </IconButton>
+            <Grid container justifyContent='space-between'>
+              <Grid item>
+                {this.state.activeItem.name}
+              </Grid>
+              <Grid item>
+                <IconButton aria-label="close" onClick={this.handleDialogClose}>
+                  <CloseIcon />
+                </IconButton>
+              </Grid>
+            </Grid>
           </DialogTitle>
           <DialogContent>
-            <div style={{width: '92%'}}>
+            <div style={{width: '91%'}}>
               <Profile draggable={false} profile={this.state.activeItem} historicTemps={[]} />
             </div>
           </DialogContent>
@@ -217,7 +224,7 @@ class ProfileList extends Component {
                     }
                   </Grid>
                   <Grid item>
-                    <Button component={Link} to={{ pathname: '/editProfile', state: { profile: this.state.activeItem } }} startIcon={<EditIcon />} variant="contained" color="primary">Edit Profile</Button>
+                    <Button component={Link} to={{ pathname: '/editProfile', state: { profile: this.state.activeItem } }} startIcon={<EditIcon />} variant="contained" color="primary">Edit</Button>
                   </Grid>
                   <Grid item>
                     <this.SelectButton onClick={this.loadClicked} startIcon={<DoneIcon />} variant="contained" color='primary'>Load</this.SelectButton>
@@ -245,26 +252,26 @@ class ProfileList extends Component {
           </DialogActions>
         </Dialog>
 
-        <Dialog open={this.state.deleteDialog}>
+        <Dialog open={this.state.deleteDialog} onClose={this.handleDeleteDialogClose}>
           <DialogTitle>
             Delete Profile
           </DialogTitle>
           <DialogContent>
-            Are you sure you want to delete {}?
+            Are you sure you want to delete "{this.state.activeItem.name}"?
           </DialogContent>
           <DialogActions>
             <Button onClick={this.handleDeleteDialogClose} color="primary">
               Cancel
             </Button>
             <Button onClick={this.deleteProfile} color="primary" autoFocus>
-              Delete
+              Yes
             </Button>
           </DialogActions>
         </Dialog>
 
         <Container maxWidth={false}>
           <Grid container direction={"row"} align={"center"} justifyContent={"center"} spacing={2}>
-            <Grid item xs={12} md={8} lg={6} style={{paddingTop: '20px'}}>
+            <Grid item xs={12} lg={12} style={{paddingTop: '20px'}}>
               <DataGrid
                 rows={this.state.profiles}
                 rowHeight={45}
@@ -322,7 +329,7 @@ class ProfileList extends Component {
                         y: 30
                       }
                     ]
-              } } }} startIcon={<EditIcon />} variant="contained" color="primary" >Create New Profile</Button>
+              } } }} startIcon={<NoteAddIcon />} variant="contained" color="primary" >Create New</Button>
             </Grid>
           </Grid>
         </Container>

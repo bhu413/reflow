@@ -2,10 +2,9 @@ import { React, Component } from 'react';
 import Stepper from '@material-ui/core/Stepper';
 import Step from '@material-ui/core/Step';
 import StepLabel from '@material-ui/core/StepLabel';
-import StepContent from '@material-ui/core/StepContent';
 import Profile from '../components/Profile';
 import EditIcon from '@material-ui/icons/Edit';
-import { Button, Container, Grid, Typography, Box, Paper, Hidden } from '@material-ui/core';
+import { Button, Container, Grid, Typography, Box, Paper } from '@material-ui/core';
 import { Link } from "react-router-dom";
 import { socket } from '../helpers/socket';
 import axios from 'axios';
@@ -17,6 +16,8 @@ import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogTitle from '@material-ui/core/DialogTitle';
+import ListAltIcon from '@material-ui/icons/ListAlt';
+import Hidden from '@material-ui/core/Hidden';
 
 class Home extends Component {
   constructor(props) {
@@ -25,6 +26,7 @@ class Home extends Component {
     this.forceRunProfile = this.forceRunProfile.bind(this);
     this.stop = this.stop.bind(this);
     this.cancelClicked = this.cancelClicked.bind(this);
+    this.coolingDialogClose = this.coolingDialogClose.bind(this);
     this.state = ({
       currentProfile: {
         "name": "flat",
@@ -62,6 +64,7 @@ class Home extends Component {
       status: "Ready",
       activeStep: 0,
       startWhenCoolingDialog: false,
+      coolingDialog: false
     });
 
   }
@@ -76,6 +79,10 @@ class Home extends Component {
     },
     {
       label: 'Run Profile',
+      description: ''
+    },
+    {
+      label: 'Peak',
       description: ''
     },
     {
@@ -120,9 +127,16 @@ class Home extends Component {
         this.setState({ activeStep: 1 });
       } else if (this.state.status === "Running") {
         this.setState({ activeStep: 2 });
-      } else if (this.state.status === "Cooling") {
+      } else if (this.state.status === "Peak") {
         this.setState({ activeStep: 3 });
+      } else if (this.state.status === "Cooling") {
+        this.setState({ activeStep: 4 });
       }
+    });
+    socket.on("notify_cooling", (message) => {
+      this.setState({
+        coolingDialog: true
+      });
     });
   }
 
@@ -133,6 +147,7 @@ class Home extends Component {
 
   componentWillUnmount() {
     socket.off("status_update");
+    socket.off("notify_cooling");
   }
 
   runProfile() {
@@ -168,11 +183,15 @@ class Home extends Component {
     this.setState({ startWhenCoolingDialog: false });
   }
 
+  coolingDialogClose() {
+    this.setState({ coolingDialog: false });
+  }
+
   render() {
-    const isRunning = this.state.status === "Preheat" || this.state.status === "Running" ;
+    const isRunning = this.state.status === "Preheat" || this.state.status === "Running" || this.state.status === "Peak" ;
     let stopStartButton;
     if (isRunning) {
-      stopStartButton = <this.StopButton onClick={this.stop} startIcon={<StopIcon />} variant="contained" color="secondary">Stop</this.StopButton>;
+      stopStartButton = <this.StopButton onClick={this.stop} startIcon={<StopIcon />} variant="contained" color="primary">Stop</this.StopButton>;
     } else {
       stopStartButton = <this.StartButton onClick={this.runProfile} startIcon={<PlayArrowIcon />} variant="contained" color="primary">Start</this.StartButton>;
     }
@@ -197,9 +216,24 @@ class Home extends Component {
           </DialogActions>
         </Dialog>
 
+        <Dialog open={this.state.coolingDialog} onClose={this.coolingDialogClose}>
+          <DialogTitle>
+            Cooling Started
+          </DialogTitle>
+          <DialogContent>
+            Door can be opened
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={this.coolingDialogClose} color="primary">
+              Ok
+            </Button>
+          </DialogActions>
+        </Dialog>
+
         <Container maxWidth={false}>
           
           <Grid container>
+            <Hidden xsDown>
               <Grid item sm={2}>
                 <Box sx={{ paddingTop: 20 }}>
                   <Paper>
@@ -217,26 +251,45 @@ class Home extends Component {
                   </Paper>
                 </Box>
               </Grid>
+            </Hidden>
+              
             
             <Grid item sm={10}>
-              <div style={{ paddingTop: "20px", width: '94%', margin: '0 0 0 auto' }}>
-                <Profile draggable={false} profile={this.state.currentProfile} historicTemps={this.state.historicTemperature} />
+              <div style={{ paddingTop: "20px", width: '93%', margin: '0 0 0 auto', minWidth: 350 }}>
+                <Paper>
+                  <Hidden smDown>
+                    <Typography align='center' variant='h5'>
+                      <u>{this.state.currentProfile.name}</u>
+                    </Typography>
+                  </Hidden>
+                  <div style={{padding: '10px 10px 6px 10px '}}>
+                    <Profile draggable={false} profile={this.state.currentProfile} historicTemps={this.state.historicTemperature}/>
+                  </div>
+                </Paper>
               </div>
             </Grid>
           </Grid>
 
           <Grid container spacing={3} alignItems="center" justifyContent='space-between' style={{ paddingTop: '15px' }}>
-            <Grid item xs={5}>
-              <Paper style={{ padding: '6px 7px 6px 10px' }}>
-                <Typography>
-                  Profile: {this.state.currentProfile.name}
-                </Typography>
-              </Paper>
+            <Grid item xs={4}>
+              <Hidden mdUp>
+                <Paper style={{ padding: '6px 7px 6px 10px' }}>
+                  <Typography>
+                    Profile: {this.state.currentProfile.name}
+                  </Typography>
+                </Paper>
+              </Hidden>
             </Grid>
+            
+            
             <Grid item>
+              
               <Grid container spacing={3}>
                 <Grid item>
-                  <Button component={Link} to={{ pathname: '/editProfile', state: { profile: this.state.currentProfile } }} startIcon={<EditIcon />} variant="contained" color="primary" >Edit Current Profile</Button>
+                  <Button component={Link} to={{ pathname: '/profileList' }} startIcon={<ListAltIcon />} variant="contained" color="primary" >Profile List</Button>
+                </Grid>
+                <Grid item>
+                  <Button component={Link} to={{ pathname: '/editProfile', state: { profile: this.state.currentProfile, tempHistory: this.state.historicTemperature } }} startIcon={<EditIcon />} variant="contained" color="primary" >Edit</Button>
                 </Grid>
                 <Grid item>
                   {stopStartButton}

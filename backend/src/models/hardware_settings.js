@@ -17,7 +17,13 @@ module.exports.saveSettings = function (settings) {
         currentSettings.fan_turnoff_temp = parseInt(settings.fan_turnoff_temp, 10);
     }
     if (settings.hasOwnProperty('thermocouple_offset')) {
-        currentSettings.thermocouple_offset = parseInt(settings.thermocouple_offset, 10);
+        currentSettings.thermocouple_offset = parseFloat(settings.thermocouple_offset);
+    }
+    if (settings.hasOwnProperty('percent_offset')) {
+        currentSettings.percent_offset = parseFloat(settings.percent_offset);
+    }
+    if (settings.hasOwnProperty('thermocouple_average_mode')) {
+        currentSettings.thermocouple_average_mode = settings.thermocouple_average_mode;
     }
 
     fs.writeFileSync(settingsDir + '/hardware_settings.json', JSON.stringify(currentSettings, null, 3));

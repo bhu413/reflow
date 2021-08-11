@@ -4,8 +4,8 @@
    "i": 0.075,
    "d": 1360,
    "delta_t": 1,
-   "look_ahead": 10,
+   "look_ahead": 5,
    "preheat": true,
-   "preheat_power": 0.7,
+   "preheat_power": 70,
    "always_hit_peak": true
 }

@@ -60,10 +60,10 @@ if (isPi()) {
         } else if (sensor2temp == -1) {
             currentTemp = sensor1temp;
         } else {
-            if (Math.abs(sensor1temp - sensor2temp) >= 20) {
-                currentTemp = -2;
-            } else {
+            if (hardwareSettings.getProperty("thermocouple_average_mode")) {
                 currentTemp = (sensor1temp + sensor2temp) / 2;
+            } else {
+                currentTemp = Math.max(sensor1temp, sensor2temp);
             }
         }
     };
@@ -71,15 +71,20 @@ if (isPi()) {
 } else {
     updateTemp = function () {
         sensor1temp = Math.floor(Math.random() * (200 - 30) + 30);
-        sensor2temp = sensor1temp;
-        currentTemp = sensor1temp;
+        sensor2temp = Math.floor(Math.random() * (200 - 30) + 30);
+
+        if (hardwareSettings.getProperty("thermocouple_average_mode")) {
+            currentTemp = (sensor1temp + sensor2temp) / 2;
+        } else {
+            currentTemp = Math.max(sensor1temp, sensor2temp);
+        }
     }
 }
-    
 
 module.exports.getTemp = function () {
     var offset = hardwareSettings.getProperty("thermocouple_offset");
-    return currentTemp + offset;
+    var percentOffset = hardwareSettings.getProperty("percent_offset") / 100.0;
+    return Number.parseFloat(((1.0 + percentOffset) * currentTemp) + offset).toFixed(2);
 }
 
 module.exports.getAllTemps = function () {

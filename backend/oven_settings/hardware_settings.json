@@ -1,9 +1,11 @@
 {
    "heat_rate": 1.2,
    "cool_rate": 0.3,
-   "relay_pin": 27,
+   "relay_pin": 4,
    "fan_pin": 22,
    "cooling_fan_pin": 16,
-   "fan_turnoff_temp": 33,
-   "thermocouple_offset": 0
+   "fan_turnoff_temp": 50,
+   "thermocouple_offset": 0,
+   "percent_offset": 0,
+   "thermocouple_average_mode": false
 }

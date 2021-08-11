@@ -7,7 +7,7 @@ import Typography from '@material-ui/core/Typography';
 import IconButton from '@material-ui/core/IconButton';
 import MenuIcon from '@material-ui/icons/Menu';
 import HomeIcon from '@material-ui/icons/Home';
-import HistoryIcon from '@material-ui/icons/History';
+import MenuOpenIcon from '@material-ui/icons/MenuOpen';
 import SettingsIcon from '@material-ui/icons/Settings';
 import { Link } from "react-router-dom";
 import axios from 'axios';
@@ -24,6 +24,11 @@ import { ListItem, Drawer, ListItemText, ListItemIcon, Divider, Dialog, DialogTi
 import { LinearProgress, Grid } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
 import { withRouter } from "react-router-dom";
+import ListAltIcon from '@material-ui/icons/ListAlt';
+import Hidden from '@material-ui/core/Hidden';
+import Backdrop from '@material-ui/core/Backdrop';
+import CircularProgress from '@material-ui/core/CircularProgress';
+
 
 class StatusBar extends Component {
     constructor(props) {
@@ -35,6 +40,7 @@ class StatusBar extends Component {
         this.qrClicked = this.qrClicked.bind(this);
         this.qrClosed = this.qrClosed.bind(this);
         this.snackbarClosed = this.snackbarClosed.bind(this);
+        this.timeout = null;
         this.state = {
             drawer: false,
             qrDialog: false,
@@ -49,7 +55,9 @@ class StatusBar extends Component {
             serverMessageSnackbar: false,
             relayOn: false,
             coolingFanOn: false,
-            fanOn: false
+            fanOn: false,
+            connected: true,
+            backdrop: false
         };
     }
 
@@ -151,6 +159,23 @@ class StatusBar extends Component {
                 serverMessageSnackbar: true
             });
         });
+        socket.on("disconnect", () => {
+            this.setState({ backdrop: true });
+            this.timeout = setTimeout(() => {
+                this.setState({ connected: false });
+            }, 3000);
+            
+        });
+        socket.on("connect", () => {
+            clearTimeout(this.timeout);
+            this.setState({ connected: true, backdrop: false });
+        });
+        if (!socket.connected) {
+            this.setState({ backdrop: true });
+            this.timeout = setTimeout(() => {
+                this.setState({ connected: false });
+            }, 3000);
+        }
     }
 
     drawerChange() {
@@ -164,6 +189,8 @@ class StatusBar extends Component {
     componentWillUnmount() {
         socket.off("status_update");
         socket.off("server_message");
+        socket.off("disconnect");
+        socket.off("connect");
     }
 
     qrClicked() {
@@ -182,8 +209,6 @@ class StatusBar extends Component {
         var temperatureDisplay = this.state.temperature + "°C";
         if (this.state.temperature === -1) {
             temperatureDisplay = "Thermocouple Disconnected!";
-        } else if (this.state.temperature === -2) {
-            temperatureDisplay = "Thermocouple Error!";
         }
 
         var relayIcon = <WhatshotIcon />;
@@ -210,6 +235,11 @@ class StatusBar extends Component {
                         {this.state.serverMessage}
                     </MuiAlert>
                 </Snackbar>
+
+                <Backdrop style={{zIndex: 10}} open={this.state.backdrop}>
+                    <CircularProgress color='primary' />
+                </Backdrop>
+
                 <Dialog onClose={this.qrClosed} open={this.state.qrDialog} fullWidth={false} maxWidth={"sm"}>
                     <DialogTitle>
                         <Grid container justifyContent='center'>
@@ -226,6 +256,9 @@ class StatusBar extends Component {
                                 <QRCode value={"http://" + this.state.address} size={200} />
                             </Grid>
                             <Grid item>
+                                Note: this control panel can only be accessed by the 12 EE lab computers.
+                            </Grid>
+                            <Grid item>
                                 <IconButton aria-label="close" onClick={this.qrClosed}>
                                     <CloseIcon />
                                 </IconButton>
@@ -233,15 +266,29 @@ class StatusBar extends Component {
                         </Grid>
                     </DialogContent>
                 </Dialog>
+
+                <Dialog open={!this.state.connected}>
+                    <DialogTitle>
+                        <Typography>
+                            Disconnected from server
+                        </Typography>
+                    </DialogTitle>
+                    <DialogContent>
+                        Please ensure server is running.
+                    </DialogContent>
+                </Dialog>
+
                 <AppBar position="static" >
                     <Toolbar >
                         <IconButton edge="start" color="inherit" aria-label="menu" onClick={this.drawerChange}>
                             <MenuIcon />
                         </IconButton>
-                        <IconButton component={Link} to='/'><HomeIcon /></IconButton>
+                        <Hidden xsDown>
+                            <IconButton component={Link} to='/' color="inherit"><HomeIcon /></IconButton>
+                        </Hidden>
                         <Grid container spacing={5} style={{ paddingLeft: 20, paddingTop: 5 }}>
-                            <Grid item style={{ minWidth: 100 }}>
-                                <Typography align='center'>
+                            <Grid item style={{ minWidth: 150 }}>
+                                <Typography align='right'>
                                     {temperatureDisplay}
                                 </Typography>
                             </Grid>
@@ -250,19 +297,21 @@ class StatusBar extends Component {
                                     {this.state.status}
                                 </Typography>
                             </Grid>
-                            <Grid item>
-                                <Grid container spacing={1}>
-                                    <Grid item>
-                                        {relayIcon}
-                                    </Grid>
-                                    <Grid item>
-                                        {coolingFanIcon}
-                                    </Grid>
-                                    <Grid item>
-                                        {fanIcon}
+                            <Hidden xsDown>
+                                <Grid item>
+                                    <Grid container spacing={1}>
+                                        <Grid item>
+                                            {relayIcon}
+                                        </Grid>
+                                        <Grid item>
+                                            {coolingFanIcon}
+                                        </Grid>
+                                        <Grid item>
+                                            {fanIcon}
+                                        </Grid>
                                     </Grid>
                                 </Grid>
-                            </Grid>
+                            </Hidden>
                             <Grid item>
                                 <Typography align='center' style={{fontWeight: 'bold'}} >
                                     {this.state.currentProfile.name}
@@ -271,7 +320,7 @@ class StatusBar extends Component {
                         </Grid>
                         <div style={{ marginLeft: 'auto' }}>
                             {(this.state.status === "Preheat" || this.state.status === "Running") &&
-                                <this.StopButton onClick={this.stop} startIcon={<StopIcon />} variant="contained" color="secondary">Stop</this.StopButton>
+                                <this.StopButton onClick={this.stop} startIcon={<StopIcon />} variant="contained" color="primary">Stop</this.StopButton>
                             }
                         </div>
 
@@ -280,8 +329,8 @@ class StatusBar extends Component {
                 </AppBar>
 
                 <Drawer open={this.state.drawer} onClose={this.drawerChange} >
-                    <ListItem button key={"menu"} onClick={this.drawerChange}>
-                        <ListItemIcon><MenuIcon /></ListItemIcon>
+                    <ListItem button key={"menu"} onClick={this.drawerChange} style={{minHeight: 50}}>
+                        <ListItemIcon><MenuOpenIcon /></ListItemIcon>
                     </ListItem>
                     <Divider />
                     <ListItem button key={"Home"} component={Link} onClick={this.drawerChange} to='/'>
@@ -289,7 +338,7 @@ class StatusBar extends Component {
                         <ListItemText>Home</ListItemText>
                     </ListItem>
                     <ListItem button key={"ProfileList"} component={Link} onClick={this.drawerChange} to='/profileList'>
-                        <ListItemIcon><HistoryIcon /></ListItemIcon>
+                        <ListItemIcon><ListAltIcon /></ListItemIcon>
                         <ListItemText>Profile List</ListItemText>
                     </ListItem>
                     <ListItem button key={"Settings"} component={Link} onClick={this.drawerChange} to='/settings'>

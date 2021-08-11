@@ -34,9 +34,6 @@ module.exports = function (socketio, tempSensor) {
     //keep track of current x value
     var currentX = 0;
 
-    //keep track of when we are trying to reach peak
-    var peakMode = false;
-
     //controller variable to be assigned when we start a profile
     var ctr;
 
@@ -50,7 +47,6 @@ module.exports = function (socketio, tempSensor) {
     var currentProfile;
     var tempHistory = [];
     var percentDone = 0;
-    var coolingMessageSent = false;
 
     //stores on duration (0 - 1000 ms) for ui to display
     var fanStatus = 0;
@@ -256,6 +252,11 @@ module.exports = function (socketio, tempSensor) {
         socketio.emit(channel, { severity: severity, message: message });
     }
 
+    //sends a message telling the home page to notify user to open door
+    function notifyCooling() {
+        sendMessage('info', 'Cooling notification', 'notify_cooling');
+    }
+
     //updates the pid settings
     function updatePidSettings() {
         proportional = pidSettings.getProperty('p');
@@ -309,7 +310,7 @@ module.exports = function (socketio, tempSensor) {
                 clearInterval(preheatInterval);
                 followProfile();
             } else {
-                relayOn(preheatPower * 1000);
+                relayOn(preheatPower * 100);
                 tempHistory = [];
                 tempHistory.push({ x: currentX, y: temperature });
             }
@@ -336,36 +337,20 @@ module.exports = function (socketio, tempSensor) {
         }
     }
 
-    function getToPeak() {
-        var peak = findPeak();
-        var temperature = tempSensor.getTemp();
-        if (temperature < peak.y - 2) {
-            ctr.setTarget(peak.y);
-            var controlVariable = ctr.update(temperature);
-            relayOn(controlVariable);
-        } else {
-            peakMode = false;
-            relayOff();
-        }
-    }
-
     function followProfile() {
         currentAction = "Running";
         var peak = findPeak();
         var lastPointIsCooling = isLastPointCooling();
         var datapoints = currentProfile.datapoints;
+        var offset = 0;
+        var peakMode = false;
 
         pidInterval = setInterval(function () {
             var temperature = tempSensor.getTemp();
-            var offset = 0;
 
             if (temperature < 0) {
                 module.stop(true);
-                if (temperature == -1) {
-                    sendMessage('error', 'Profile stopped. Thermocouple disconnected.');
-                } else if (temperature == -2) {
-                    sendMessage('error', 'Profile stopped. Thermocouples differ by more than 20 degrees.');
-                }
+                sendMessage('error', 'Profile stopped. Thermocouple disconnected.');
                 return -1;
             }
 
@@ -375,43 +360,47 @@ module.exports = function (socketio, tempSensor) {
                     sendMessage('error', 'Could not reach peak after attempting for 5 minutes');
                     return -1;
                 }
-                getToPeak();
+                ctr.setTarget(peak.y);
                 offset++;
+                if (temperature > peak.y - 2) {
+                    peakMode = false;
+                }
             } else {
                 if (currentX + lookAhead === peak.x) {
-                    if (temperature < peak.y - 2 && alwaysHitPeak) {
-                        peakMode = true;
-                        getToPeak();
+                    currentAction = "Peak";
+                    if (alwaysHitPeak) {
+                        if (temperature < peak.y - 2) {
+                            ctr.setTarget(peak.y);
+                            peakMode = true;
+                        }
+                    } else {
+                        ctr.setTarget(getTemperatureAtPoint(currentX + lookAhead - offset));
                     }
                 } else {
                     ctr.setTarget(getTemperatureAtPoint(currentX + lookAhead - offset));
-                    var controlVariable = ctr.update(temperature);
-                    if (controlVariable > 0) {
-                        relayOn(controlVariable);
-                        coolingFanOff();
-                    } else if (controlVariable < 0) {
-                        coolingFanOn(controlVariable * -1);
-                        relayOff();
-                    }
+                }
+            }
 
-                    if (currentX === datapoints[datapoints.length - 2].x - lookAhead + offset) {
-                        if (lastPointIsCooling && coolingMessageSent == false) {
-                            currentAction = "Cooling";
-                            sendMessage('info', 'Cooling started. Door can be opened to for faster cooling if needed.');
-                            coolingMessageSent = true;
-                        }
-                    } else if (currentX === datapoints[datapoints.length - 1].x - lookAhead + offset) {
-                        currentAction = "Cooling";
-                        if (!coolingMessageSent) {
-                            sendMessage('success', 'Profile completed. Door can be opened for faster cooling if needed.');
-                            coolingMessageSent = true;
-                        } else {
-                            sendMessage('success', 'Profile completed.');
-                        }
-                        module.stop(true);
-                        clearInterval(pidInterval);
-                    }
-                }  
+            var controlVariable = ctr.update(temperature);
+            if (controlVariable > 0) {
+                relayOn(controlVariable);
+                coolingFanOff();
+            } else if (controlVariable < 0) {
+                coolingFanOn(controlVariable * -1);
+                relayOff();
+            }
+
+            if (currentX + lookAhead - offset === datapoints[datapoints.length - 2].x) {
+                if (lastPointIsCooling) {
+                    var coolingSlope = (datapoints[datapoints.length - 1].y - datapoints[datapoints.length - 2].y) / (datapoints[datapoints.length - 1].x - datapoints[datapoints.length - 2].x)
+                    sendMessage('info', 'Cooling started. Door can be opened to for faster cooling if needed.');
+                    notifyCooling();
+                    module.stop(true)
+                }
+            } else if (currentX + lookAhead - offset === datapoints[datapoints.length - 1].x) {
+                sendMessage('success', 'Profile completed. CAUTION: contents may be hot.');
+                notifyCooling();
+                module.stop(true);
             }
             tempHistory.push({ x: currentX, y: temperature });
             percentDone = Math.min(Math.floor((currentX / datapoints[datapoints.length - 1].x) * 100), 100);
@@ -466,8 +455,6 @@ module.exports = function (socketio, tempSensor) {
             coolDown(false);
             if (temperature == -1) {
                 sendMessage('error', 'Unable to start. Thermocouple disconnected.');
-            } else if (temperature == -2) {
-                sendMessage('error', 'Unable to start. Thermocouples differ by more than 20 degrees.');
             }
             return -1;
         }
@@ -475,17 +462,18 @@ module.exports = function (socketio, tempSensor) {
         fanOn();
 
         //fast forward in profile to point with current temperature
-        while (temperature > getTemperatureAtPoint(currentX)) {
+        while (temperature > getTemperatureAtPoint(currentX + lookAhead)) {
             if (currentX < datapoints[datapoints.length - 1].x) {
                 currentX++;
             } else {
                 sendMessage('error', 'Current temperature is above all points');
-                module.stop(true);
+                module.stop();
+                coolDown(false);
                 return -1;
             }
         }
 
-        sendMessage('success', currentProfile.name + ' started');
+        sendMessage('success', 'Starting ' + currentProfile.name);
         ctr = new Controller(proportional, integral, derivative, dt); // k_p, k_i, k_d, dt
         if (preheat) {
             runPreheat();
@@ -549,7 +537,10 @@ module.exports = function (socketio, tempSensor) {
     process.on('uncaughtException', (error) => {
         console.log(error);
         module.stop();
-        process.exit(1);
+    });
+
+    process.on('exit', (code) => {
+        module.stop();
     });
 
     console.log("oven initialized");
