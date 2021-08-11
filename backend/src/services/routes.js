@@ -148,12 +148,13 @@ module.exports = function (app, express, socketio) {
         }
         
     });
+
     //statically serve files from folder
     app.use('/api/reflow_profiles', express.static('reflow_profiles'));
 
     app.post("/api/reflow_profiles/save", (req, res) => {
         var validCode = profile.saveProfile(req.body);
-        res.json({ status: validCode.status, message: validCode.message });
+        res.json({ status: validCode.status, message: validCode.message, new_name: validCode.new_name });
     });
 
     app.post("/api/reflow_profiles/delete", (req, res) => {

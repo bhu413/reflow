@@ -1,5 +1,5 @@
 {
-    "screen_password": "232532",
+    "screen_password": "password",
     "whitelist_ips": [
         "localhost",
         "127.0.0.1"

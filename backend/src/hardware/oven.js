@@ -356,7 +356,8 @@ module.exports = function (socketio, tempSensor) {
 
             if (peakMode) {
                 if (offset > 300) {
-                    module.stop(true);
+                    module.stop();
+                    coolDown(false);
                     sendMessage('error', 'Could not reach peak after attempting for 5 minutes');
                     return -1;
                 }

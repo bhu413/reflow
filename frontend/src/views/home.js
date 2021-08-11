@@ -207,10 +207,10 @@ class Home extends Component {
             Start profile anyway?
           </DialogContent>
           <DialogActions>
-            <Button onClick={this.cancelClicked} color="primary">
+            <Button onClick={this.cancelClicked} color="primary" variant='contained'>
               Cancel
             </Button>
-            <Button onClick={this.forceRunProfile} color="primary" autoFocus>
+            <Button onClick={this.forceRunProfile} color="primary" variant='contained'>
               Start Anyway
             </Button>
           </DialogActions>
@@ -224,7 +224,7 @@ class Home extends Component {
             Door can be opened
           </DialogContent>
           <DialogActions>
-            <Button onClick={this.coolingDialogClose} color="primary">
+            <Button onClick={this.coolingDialogClose} color="primary" variant='contained'>
               Ok
             </Button>
           </DialogActions>
@@ -255,7 +255,7 @@ class Home extends Component {
               
             
             <Grid item sm={10}>
-              <div style={{ paddingTop: "20px", width: '93%', margin: '0 0 0 auto', minWidth: 350 }}>
+              <div style={{ paddingTop: "20px", width: '91%', margin: '0 0 0 auto', minWidth: 350 }}>
                 <Paper>
                   <Hidden smDown>
                     <Typography align='center' variant='h5'>

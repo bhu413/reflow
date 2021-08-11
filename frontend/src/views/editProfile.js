@@ -250,6 +250,9 @@ class EditProfile extends Component {
     this.setState({ newProfile: tempProfile });
     axios.post('/api/reflow_profiles/save', this.state.newProfile)
       .then(res => {
+        var tempProfile = this.state.newProfile;
+        tempProfile.name = res.data.new_name;
+        this.setState({ newProfile: tempProfile });
         this.setState({ loadDialog: true });
       });
 
@@ -343,7 +346,7 @@ class EditProfile extends Component {
     }
 
     var historySwitch = <></>;
-    if (this.state.tempHistory.length > 0) {
+    if (this.state.tempHistory.length > 1) {
       historySwitch = <Grid item>
         <Paper>
           <Grid container justifyContent="space-evenly">
@@ -521,7 +524,7 @@ class EditProfile extends Component {
                   <u>{this.state.newProfile.name}</u>
                 </Typography>
               </Hidden>
-              <div style={{ paddingTop: "20px", width: '93%', marginLeft: 'auto', minWidth: 350 }}>
+              <div style={{ paddingTop: "20px", width: '91%', marginLeft: 'auto', minWidth: 350 }}>
                 <Profile
                   draggable={true}
                   profile={this.state.newProfile}

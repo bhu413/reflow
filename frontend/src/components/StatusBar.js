@@ -207,7 +207,7 @@ class StatusBar extends Component {
 
     render() {
         var temperatureDisplay = this.state.temperature + "°C";
-        if (this.state.temperature === -1) {
+        if (this.state.temperature < 0) {
             temperatureDisplay = "Thermocouple Disconnected!";
         }
 

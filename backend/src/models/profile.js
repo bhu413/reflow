@@ -1,4 +1,5 @@
 const fs = require('fs');
+const sanitize = require("sanitize-filename");
 const profileDir = './reflow_profiles';
 const MAX_PROFILES = 50;
 
@@ -14,20 +15,23 @@ function validate(profile) {
     //check for invalid file characters
     //must have at least 2 data points
     //datapoints must be in order
-    return { status: 200, message: 'profile is valid' };
+    
+    return { status: 200, message: 'profile is valid', new_name: sanitize(profile.name) };
     return { status: 406, message: 'profie not valid because...' };
 }
 
 module.exports.saveProfile = function(profile) {
     var validCode = validate(profile);
     if (validCode.status != 200) {
-        return validCode;
+        return -1;
     }
     
+    profile.name = validCode.new_name;
+
     if (getNumProfiles() >= MAX_PROFILES) {
         deleteOldestProfile();
     }
-    
+
     fs.writeFileSync(profileDir + '/' + profile.name + '.json', JSON.stringify(profile, null, 3));
     //add to all profiles list
     updateProfileList();

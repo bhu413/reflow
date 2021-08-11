@@ -196,6 +196,7 @@ class NetworkSettings extends Component {
                                 <Checkbox checked={this.state.remoteConnections} onChange={this.handleSwitch} color='primary' />
                             </Grid>
 
+                            {/*
                             <Grid item>
                                 <Typography align='left'>
                                     Send message to all connections
@@ -205,7 +206,8 @@ class NetworkSettings extends Component {
                                     Send
                                 </Button>
                             </Grid>
-
+                            */}
+                            
                             <Grid container justifyContent='flex-end' spacing={3}>
                                 <Grid item>
                                     <Typography variant='caption'>
