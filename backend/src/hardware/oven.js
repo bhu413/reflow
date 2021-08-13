@@ -13,6 +13,7 @@ module.exports = function (socketio, tempSensor) {
     var relay;
     var coolingFan;
     var fan;
+    var buzzer;
 
     //keeping track of the intervals
     var pidInterval;
@@ -23,12 +24,11 @@ module.exports = function (socketio, tempSensor) {
     var proportional;
     var integral;
     var derivative;
+    var useCoolingFan;
     var dt;
     var lookAhead;
-    var onOffMode;
     var preheat;
     var preheatPower;
-    var fanOffTemp;
     var alwaysHitPeak;
 
     //keep track of current x value
@@ -47,6 +47,7 @@ module.exports = function (socketio, tempSensor) {
     var currentProfile;
     var tempHistory = [];
     var percentDone = 0;
+    var coolingNotified = false;
 
     //stores on duration (0 - 1000 ms) for ui to display
     var fanStatus = 0;
@@ -62,6 +63,7 @@ module.exports = function (socketio, tempSensor) {
     var coolingFanOff;
     var fanOn;
     var fanOff;
+    var beepBuzzer;
 
     if (isPi()) {
 
@@ -78,173 +80,272 @@ module.exports = function (socketio, tempSensor) {
             if (fan) {
                 fan.writeSync(0);
             }
+            if (buzzer) {
+                buzzer.writeSync(0);
+            }
 
             //switch to new pins
-            relay = new Gpio(hardwareSettings.getProperty('relay_pin'), 'out');
-            coolingFan = new Gpio(hardwareSettings.getProperty('cooling_fan_pin'), 'out');
-            fan = new Gpio(hardwareSettings.getProperty('fan_pin'), 'out');
+            if (hardwareSettings.getProperty('relay_pin') !== 0) {
+                relay = new Gpio(hardwareSettings.getProperty('relay_pin'), 'out');
+            } else {
+                relay = null;
+            }
+            
+            if (hardwareSettings.getProperty('cooling_fan_pin') !== 0) {
+                coolingFan = new Gpio(hardwareSettings.getProperty('cooling_fan_pin'), 'out');
+            } else {
+                coolingFan = null;
+            }
+
+            if (hardwareSettings.getProperty('fan_pin') !== 0) {
+                fan = new Gpio(hardwareSettings.getProperty('fan_pin'), 'out');
+            } else {
+                fan = null;
+            }
+            
+            if (hardwareSettings.getProperty('buzzer_pin') !== 0) {
+                buzzer = new Gpio(hardwareSettings.getProperty('buzzer_pin'), 'out');
+            } else {
+                buzzer = null;
+            }
+            
         };
 
         relayOn = function (duration) {
-            if (duration) {
-                if (duration >= 980) {
-                    relayStatus = 1000;
-                    relay.writeSync(1); 
-                } else if (duration < 20) {
-                    relayOff();
+            if (relay !== null) {
+                if (duration) {
+                    if (duration >= 980) {
+                        relayStatus = 1000;
+                        relay.writeSync(1);
+                    } else if (duration < 20) {
+                        relayOff();
+                    } else {
+                        relayStatus = duration;
+                        relay.writeSync(1);
+                        relayTimeout = setTimeout(function () {
+                            relayStatus = 0;
+                            relay.writeSync(0);
+                        }, duration);
+                    }
                 } else {
-                    relayStatus = duration;
+                    relayStatus = 1000;
                     relay.writeSync(1);
-                    relayTimeout = setTimeout(function () {
-                        relayStatus = 0;
-                        relay.writeSync(0);
-                    }, duration);
                 }
-            } else {
-                relayStatus = 1000;
-                relay.writeSync(1);
             }
         };
 
         relayOff = function () {
-            relayStatus = 0;
-            clearTimeout(relayTimeout);
-            relay.writeSync(0);
+            if (relay !== null) {
+                relayStatus = 0;
+                clearTimeout(relayTimeout);
+                relay.writeSync(0);
+            }
         };
 
         coolingFanOn = function (duration) {
-            if (duration) {
-                if (duration >= 950) {
+            if (coolingFan !== null) {
+                if (duration) {
+                    if (duration >= 950) {
+                        coolingFanStatus = 1000;
+                        coolingFan.writeSync(1);
+                    } else if (duration < 50) {
+                        coolingFanOff();
+                    } else {
+                        coolingFanStatus = duration;
+                        coolingFan.writeSync(1);
+                        coolingFanTimeout = setTimeout(function () {
+                            coolingFanStatus = 0;
+                            coolingFan.writeSync(0);
+                        }, duration);
+                    }
+                } else {
                     coolingFanStatus = 1000;
                     coolingFan.writeSync(1);
-                } else if (duration < 50) {
-                    coolingFanOff();
-                } else {
-                    coolingFanStatus = duration;
-                    coolingFan.writeSync(1);
-                    coolingFanTimeout = setTimeout(function () {
-                        coolingFanStatus = 0;
-                        coolingFan.writeSync(0);
-                    }, duration);
                 }
-            } else {
-                coolingFanStatus = 1000;
-                coolingFan.writeSync(1);
             }
-
         };
 
         coolingFanOff = function () {
-            coolingFanStatus = 0;
-            clearTimeout(coolingFanTimeout);
-            coolingFan.writeSync(0);
+            if (coolingFan !== null) {
+                coolingFanStatus = 0;
+                clearTimeout(coolingFanTimeout);
+                coolingFan.writeSync(0);
+            }
         };
 
         fanOn = function (duration) {
-            if (duration) {
-                if (duration >= 980) {
+            if (fan !== null) {
+                if (duration) {
+                    if (duration >= 980) {
+                        fanStatus = 1000;
+                        fan.writeSync(1);
+                    } else if (duration < 20) {
+                        fanOff();
+                    } else {
+                        fanStatus = duration;
+                        fan.writeSync(1);
+                        fanTimeout = setTimeout(function () {
+                            fanStatus = 0;
+                            fan.writeSync(0);
+                        }, duration);
+                    }
+                } else {
                     fanStatus = 1000;
                     fan.writeSync(1);
-                } else if (duration < 20) {
-                    fanOff();
-                } else {
-                    fanStatus = duration;
-                    fan.writeSync(1);
-                    fanTimeout = setTimeout(function () {
-                        fanStatus = 0;
-                        fan.writeSync(0);
-                    }, duration);
                 }
-            } else {
-                fanStatus = 1000;
-                fan.writeSync(1);
             }
         };
 
         fanOff = function () {
-            fanStatus = 0;
-            clearTimeout(fanTimeout);
-            fan.writeSync(0);
+            if (fan !== null) {
+                fanStatus = 0;
+                clearTimeout(fanTimeout);
+                fan.writeSync(0);
+            }
         };
+
+        beepBuzzer = function (numTimes) {
+            if (buzzer !== null) {
+                var i = 0;
+                var buzzerInterval = setInterval(function () {
+                    if (i < numTimes) {
+                        i++;
+                        buzzer.writeSync(1);
+                        setTimeout(function () {
+                            buzzer.writeSync(0);
+                        }, 500);
+                    } else {
+                        clearInterval(buzzerInterval);
+                    }
+                }, 700);
+            }
+        }
 
     } else {
         updateGpio = function () {
             //switch to new pins
-            relay = hardwareSettings.getProperty('relay_pin');
-            coolingFan = hardwareSettings.getProperty('cooling_fan_pin');
-            fan = hardwareSettings.getProperty('fan_pin');
+            if (hardwareSettings.getProperty('relay_pin') !== 0) {
+                relay = hardwareSettings.getProperty('relay_pin');
+            } else {
+                relay = null;
+            }
+
+            if (hardwareSettings.getProperty('cooling_fan_pin') !== 0) {
+                coolingFan = hardwareSettings.getProperty('cooling_fan_pin');
+            } else {
+                coolingFan = null;
+            }
+
+            if (hardwareSettings.getProperty('fan_pin') !== 0) {
+                fan = hardwareSettings.getProperty('fan_pin');
+            } else {
+                fan = null;
+            }
+
+            if (hardwareSettings.getProperty('buzzer_pin') !== 0) {
+                buzzer = hardwareSettings.getProperty('buzzer_pin');
+            } else {
+                buzzer = null;
+            }
         };
 
         relayOn = function (duration) {
-            if (duration) {
-                if (duration > 980) {
-                    duration = 980;
+            if (relay !== null) {
+                if (duration) {
+                    if (duration > 980) {
+                        duration = 980;
+                    }
+                    relayStatus = duration;
+                    console.log("relay on (gpio" + relay + ")");
+                    relayTimeout = setTimeout(function () {
+                        relayStatus = 0;
+                        console.log("relay off (gpio" + relay + ")");
+                    }, duration);
+                } else {
+                    relayStatus = 1000;
+                    console.log("relay on (gpio" + relay + ")");
                 }
-                relayStatus = duration;
-                console.log("relay on (gpio" + relay + ")");
-                relayTimeout = setTimeout(function () {
-                    relayStatus = 0;
-                    console.log("relay off (gpio" + relay + ")");
-                }, duration);
-            } else {
-                relayStatus = 1000;
-                console.log("relay on (gpio" + relay + ")");
             }
         };
 
         relayOff = function () {
-            relayStatus = 0;
-            clearTimeout(relayTimeout);
-            console.log("relay off (gpio" + relay + ")");
+            if (relay !== null) {
+                relayStatus = 0;
+                clearTimeout(relayTimeout);
+                console.log("relay off (gpio" + relay + ")");
+            }
         };
 
         coolingFanOn = function (duration) {
-            if (duration) {
-                if (duration > 980) {
-                    duration = 980;
+            if (coolingFan !== null) {
+                if (duration) {
+                    if (duration > 980) {
+                        duration = 980;
+                    }
+                    coolingFanStatus = duration;
+                    console.log("cooling fan on (gpio" + coolingFan + ")");
+                    coolingFanTimeout = setTimeout(function () {
+                        coolingFanStatus = 0;
+                        console.log("cooling fan off (gpio" + coolingFan + ")");
+                    }, duration);
+                } else {
+                    coolingFanStatus = 1000;
+                    console.log("cooling fan on (gpio" + coolingFan + ")");
                 }
-                coolingFanStatus = duration;
-                console.log("cooling fan on (gpio" + coolingFan + ")");
-                coolingFanTimeout = setTimeout(function () {
-                    coolingFanStatus = 0;
-                    console.log("cooling fan off (gpio" + coolingFan + ")");
-                }, duration);
-            } else {
-                coolingFanStatus = 1000;
-                console.log("cooling fan on (gpio" + coolingFan + ")");
             }
-
         };
 
         coolingFanOff = function () {
-            coolingFanStatus = 0;
-            clearTimeout(coolingFanTimeout);
-            console.log("cooling fan off (gpio" + coolingFan + ")");
+            if (coolingFan !== null) {
+                coolingFanStatus = 0;
+                clearTimeout(coolingFanTimeout);
+                console.log("cooling fan off (gpio" + coolingFan + ")");
+            }
         };
 
         fanOn = function (duration) {
-            if (duration) {
-                if (duration > 980) {
-                    duration = 980
+            if (fan !== null) {
+                if (duration) {
+                    if (duration > 980) {
+                        duration = 980
+                    }
+                    fanStatus = duration;
+                    console.log("fan on (gpio" + fan + ")");
+                    fanTimeout = setTimeout(function () {
+                        fanStatus = 0;
+                        console.log("fan off (gpio" + fan + ")");
+                    }, duration);
+                } else {
+                    fanStatus = 1000;
+                    console.log("fan on (gpio" + fan + ")");
                 }
-                fanStatus = duration;
-                console.log("fan on (gpio" + fan + ")");
-                fanTimeout = setTimeout(function () {
-                    fanStatus = 0;
-                    console.log("fan off (gpio" + fan + ")");
-                }, duration);
-            } else {
-                fanStatus = 1000;
-                console.log("fan on (gpio" + fan + ")");
             }
         };
 
         fanOff = function () {
-            fanStatus = 0;
-            clearTimeout(fanTimeout);
-            console.log("fan off (gpio" + fan + ")");
+            if (fan !== null) {
+                fanStatus = 0;
+                clearTimeout(fanTimeout);
+                console.log("fan off (gpio" + fan + ")");
+            }
         };
 
+        beepBuzzer = function (numTimes = 1) {
+            if (buzzer !== null) {
+                var i = 0;
+                var buzzerInterval = setInterval(function () {
+                    if (i < numTimes) {
+                        i++;
+                        console.log("buzzer on (gpio" + buzzer + ")");
+                        setTimeout(function () {
+                            console.log("buzzer off (gpio" + buzzer + ")");
+                        }, 500);
+                    } else {
+                        clearInterval(buzzerInterval);
+                    }
+                }, 700);
+            }
+        }
     }
 
     //sends message via socketio
@@ -262,6 +363,7 @@ module.exports = function (socketio, tempSensor) {
         proportional = pidSettings.getProperty('p');
         integral = pidSettings.getProperty('i');
         derivative = pidSettings.getProperty('d');
+        useCoolingFan = pidSettings.getProperty("use_cooling_fan");
         dt = pidSettings.getProperty('delta_t');
         lookAhead = pidSettings.getProperty('look_ahead');
         onOffMode = pidSettings.getProperty('onoff_mode');
@@ -306,7 +408,7 @@ module.exports = function (socketio, tempSensor) {
         currentAction = "Preheat";
         preheatInterval = setInterval(function () {
             var temperature = tempSensor.getTemp();
-            if (temperature >= getTemperatureAtPoint(currentX + lookAhead)) {
+            if (temperature >= getTemperatureAtPoint(currentX + lookAhead) - 2) {
                 clearInterval(preheatInterval);
                 followProfile();
             } else {
@@ -337,10 +439,25 @@ module.exports = function (socketio, tempSensor) {
         }
     }
 
+    function findFirstCoolingPoint() {
+        var datapoints = currentProfile.datapoints;
+        var i = datapoints.length - 1;
+        var current = datapoints[i];
+        var oneBefore = datapoints[i - 1];
+        while (i > 0 && current.y < oneBefore.y) {
+            current = oneBefore;
+            i--;
+            current = datapoints[i];
+            oneBefore = datapoints[i - 1];
+        }
+        return current;
+    }
+
     function followProfile() {
         currentAction = "Running";
         var peak = findPeak();
-        var lastPointIsCooling = isLastPointCooling();
+        //var lastPointIsCooling = isLastPointCooling();
+        var firstCoolingPoint = findFirstCoolingPoint();
         var datapoints = currentProfile.datapoints;
         var offset = 0;
         var peakMode = false;
@@ -386,21 +503,23 @@ module.exports = function (socketio, tempSensor) {
             if (controlVariable > 0) {
                 relayOn(controlVariable);
                 coolingFanOff();
-            } else if (controlVariable < 0) {
+            } else if (controlVariable < 0 && useCoolingFan) {
                 coolingFanOn(controlVariable * -1);
                 relayOff();
             }
 
-            if (currentX + lookAhead - offset === datapoints[datapoints.length - 2].x) {
-                if (lastPointIsCooling) {
-                    var coolingSlope = (datapoints[datapoints.length - 1].y - datapoints[datapoints.length - 2].y) / (datapoints[datapoints.length - 1].x - datapoints[datapoints.length - 2].x)
-                    sendMessage('info', 'Cooling started. Door can be opened to for faster cooling if needed.');
+            if (currentX + lookAhead - offset >= firstCoolingPoint.x) {
+                if (!coolingNotified) {
+                    //var coolingSlope = (datapoints[datapoints.length - 1].y - datapoints[datapoints.length - 2].y) / (datapoints[datapoints.length - 1].x - datapoints[datapoints.length - 2].x)
+                    sendMessage('info', 'Cooling started. Please open door now.');
                     notifyCooling();
-                    module.stop(true)
+                    beepBuzzer(4);
+                    coolingNotified = true;
+                    module.stop(true);
                 }
-            } else if (currentX + lookAhead - offset === datapoints[datapoints.length - 1].x) {
+            }
+            if (currentX + lookAhead - offset === datapoints[datapoints.length - 1].x) {
                 sendMessage('success', 'Profile completed. CAUTION: contents may be hot.');
-                notifyCooling();
                 module.stop(true);
             }
             tempHistory.push({ x: currentX, y: temperature });
@@ -427,8 +546,10 @@ module.exports = function (socketio, tempSensor) {
                     fanOff();
                     currentAction = "Ready";
                     clearInterval(coolingInterval);
+                    beepBuzzer();
                 } else {
                     if (shouldRecord) {
+                        percentDone = Math.min(Math.floor((currentX / datapoints[datapoints.length - 1].x) * 100), 100);
                         tempHistory.push({ x: currentX, y: temperature });
                         currentX++;
                     }
@@ -448,6 +569,7 @@ module.exports = function (socketio, tempSensor) {
         updateGpio();
         currentX = 0;
         tempHistory = [];
+        coolingNotified = false;
         datapoints = currentProfile.datapoints;
 
         var temperature = tempSensor.getTemp();
@@ -510,6 +632,12 @@ module.exports = function (socketio, tempSensor) {
             relay: relayStatus,
             cooling_fan: coolingFanStatus,
             fan: fanStatus
+        };
+    }
+
+    module.getHistoricTemperature = function () {
+        return {
+            historic_temperature: tempHistory
         };
     }
 

@@ -199,7 +199,7 @@ class Home extends Component {
       <>
         <StatusBar />
 
-        <Dialog open={this.state.startWhenCoolingDialog} onClose={this.cancelClicked}>
+        <Dialog open={this.state.startWhenCoolingDialog} onClose={this.cancelClicked} maxWidth='xs' fullWidth>
           <DialogTitle>
             Oven still cooling
           </DialogTitle>
@@ -216,12 +216,12 @@ class Home extends Component {
           </DialogActions>
         </Dialog>
 
-        <Dialog open={this.state.coolingDialog} onClose={this.coolingDialogClose}>
+        <Dialog open={this.state.coolingDialog} onClose={this.coolingDialogClose} maxWidth='xs' fullWidth>
           <DialogTitle>
             Cooling Started
           </DialogTitle>
           <DialogContent>
-            Door can be opened
+            Please open oven door.
           </DialogContent>
           <DialogActions>
             <Button onClick={this.coolingDialogClose} color="primary" variant='contained'>
@@ -262,7 +262,7 @@ class Home extends Component {
                       <u>{this.state.currentProfile.name}</u>
                     </Typography>
                   </Hidden>
-                  <div style={{padding: '10px 10px 6px 10px '}}>
+                  <div style={{padding: '10px 10px 15px 10px '}}>
                     <Profile draggable={false} profile={this.state.currentProfile} historicTemps={this.state.historicTemperature}/>
                   </div>
                 </Paper>
@@ -271,10 +271,10 @@ class Home extends Component {
           </Grid>
 
           <Grid container spacing={3} alignItems="center" justifyContent='space-between' style={{ paddingTop: '15px' }}>
-            <Grid item xs={4}>
+            <Grid item xs={5}>
               <Hidden mdUp>
-                <Paper style={{ padding: '6px 7px 6px 10px' }}>
-                  <Typography>
+                <Paper style={{ padding: '6px 7px 6px 10px', minWidth: 285 }}>
+                  <Typography noWrap style={{width: 270}}>
                     Profile: {this.state.currentProfile.name}
                   </Typography>
                 </Paper>
@@ -282,8 +282,7 @@ class Home extends Component {
             </Grid>
             
             
-            <Grid item>
-              
+            <Grid item>   
               <Grid container spacing={3}>
                 <Grid item>
                   <Button component={Link} to={{ pathname: '/profileList' }} startIcon={<ListAltIcon />} variant="contained" color="primary" >Profile List</Button>

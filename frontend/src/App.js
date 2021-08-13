@@ -64,8 +64,8 @@ class App extends Component {
       this.setState({
         darkMode: message.dark_mode,
         primary: message.primary_color,
-        secondary: message.secondary_color
-      })
+        secondary: message.secondary_color,
+      });
     });
   }
 
@@ -79,6 +79,7 @@ class App extends Component {
   }
 
   componentWillUnmount() {
+    socket.off("appearance_update");
     socket.disconnect();
   }
 
@@ -178,6 +179,7 @@ class App extends Component {
 
     return (
       <ThemeProvider theme={theme}>
+        
         <IdleTimer
           timeout={7560000}
           onIdle={this.appIdle}
@@ -238,9 +240,10 @@ class App extends Component {
             onKeyPress={this.handleKeyboardInput}
           />
         </Dialog>
+        
         <Router>
-
           <SocketContext.Provider value={socket}>
+            
             <Switch>
 
               <Route exact path="/" >

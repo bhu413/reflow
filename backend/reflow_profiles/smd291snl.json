@@ -1,7 +1,7 @@
 {
    "name": "smd291snl",
    "date_created": 1627878048161,
-   "last_run": 1628633009902,
+   "last_run": 1628851080509,
    "datapoints": [
       {
          "x": 0,
@@ -28,5 +28,5 @@
          "y": 217
       }
    ],
-   "id": "smd291snl"
+   "is_default": true
 }

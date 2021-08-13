@@ -3,6 +3,7 @@
    "cool_rate": 0.3,
    "relay_pin": 4,
    "fan_pin": 22,
+   "buzzer_pin": 25,
    "cooling_fan_pin": 16,
    "fan_turnoff_temp": 50,
    "thermocouple_offset": 0,

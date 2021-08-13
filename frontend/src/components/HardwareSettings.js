@@ -30,15 +30,17 @@ class HardwareSettings extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            relayPin: 5,
-            fanPin: 6,
+            relayPin: 4,
+            fanPin: 22,
             coolingFanPin: 16,
+            buzzerPin: 6,
             thermocoupleOffset: 0,
             percentOffset: 0,
             inputChanged: false,
             relayError: false,
             fanError: false,
             coolingFanError: false,
+            buzzerError: false,
             fanTurnoffTemp: 0,
             thermo1: "n/a",
             thermo2: "n/a",
@@ -53,6 +55,7 @@ class HardwareSettings extends Component {
         this.handleRelayChange = this.handleRelayChange.bind(this);
         this.handleFanChange = this.handleFanChange.bind(this);
         this.handleCoolingFanChange = this.handleCoolingFanChange.bind(this);
+        this.handleBuzzerChange = this.handleBuzzerChange.bind(this);
         this.handleFanTurnoffChange = this.handleFanTurnoffChange.bind(this);
         this.handleThermocoupleOffset = this.handleThermocoupleOffset.bind(this);
         this.handleThermocoupleRefresh = this.handleThermocoupleRefresh.bind(this);
@@ -74,6 +77,7 @@ class HardwareSettings extends Component {
                     relayPin: result.relay_pin,
                     fanPin: result.fan_pin,
                     coolingFanPin: result.cooling_fan_pin,
+                    buzzerPin: result.buzzer_pin,
                     fanTurnoffTemp: result.fan_turnoff_temp,
                     thermocoupleOffset: result.thermocouple_offset,
                     percentOffset: result.percent_offset
@@ -96,6 +100,10 @@ class HardwareSettings extends Component {
 
     handleCoolingFanChange(e) {
         this.setState({ coolingFanPin: e.target.value, inputChanged: true });
+    }
+
+    handleBuzzerChange(e) {
+        this.setState({ buzzerPin: e.target.value, inputChanged: true });
     }
 
     handleFanTurnoffChange(e) {
@@ -139,6 +147,7 @@ class HardwareSettings extends Component {
         newSettings.relay_pin = this.state.relayPin;
         newSettings.fan_pin = this.state.fanPin;
         newSettings.cooling_fan_pin = this.state.coolingFanPin;
+        newSettings.buzzer_pin = this.state.buzzerPin;
         newSettings.fan_turnoff_temp = this.state.fanTurnoffTemp;
         newSettings.thermocouple_offset = this.state.thermocoupleOffset;
         newSettings.percent_offset = this.state.percentOffset;
@@ -258,17 +267,18 @@ class HardwareSettings extends Component {
                                         <FormControl error={this.state.relayError}>
                                             <InputLabel>Relay GPIO</InputLabel>
                                             <Select value={this.state.relayPin} onChange={this.handleRelayChange}>
-                                                <MenuItem value={4} disabled={this.state.fanPin === 4 || this.state.coolingFanPin === 4}>4 (pin 7)</MenuItem>
-                                                <MenuItem value={5} disabled={this.state.fanPin === 5 || this.state.coolingFanPin === 5}>5 (pin 29)</MenuItem>
-                                                <MenuItem value={6} disabled={this.state.fanPin === 6 || this.state.coolingFanPin === 6}>6 (pin 31)</MenuItem>
-                                                <MenuItem value={16} disabled={this.state.fanPin === 16 || this.state.coolingFanPin === 16}>16 (pin 36)</MenuItem>
-                                                <MenuItem value={17} disabled={this.state.fanPin === 17 || this.state.coolingFanPin === 17}>17 (pin 11)</MenuItem>
-                                                <MenuItem value={22} disabled={this.state.fanPin === 22 || this.state.coolingFanPin === 22}>22 (pin 15)</MenuItem>
-                                                <MenuItem value={23} disabled={this.state.fanPin === 23 || this.state.coolingFanPin === 23}>23 (pin 16)</MenuItem>
-                                                <MenuItem value={24} disabled={this.state.fanPin === 24 || this.state.coolingFanPin === 24}>24 (pin 18)</MenuItem>
-                                                <MenuItem value={25} disabled={this.state.fanPin === 25 || this.state.coolingFanPin === 25}>25 (pin 22)</MenuItem>
-                                                <MenuItem value={26} disabled={this.state.fanPin === 26 || this.state.coolingFanPin === 26}>26 (pin 37)</MenuItem>
-                                                <MenuItem value={27} disabled={this.state.fanPin === 27 || this.state.coolingFanPin === 27}>27 (pin 13)</MenuItem>
+                                                <MenuItem value={0}>Disabled</MenuItem>
+                                                <MenuItem value={4} disabled={this.state.fanPin === 4 || this.state.coolingFanPin === 4 || this.state.buzzerPin === 4}>4 (pin 7)</MenuItem>
+                                                <MenuItem value={5} disabled={this.state.fanPin === 5 || this.state.coolingFanPin === 5 || this.state.buzzerPin === 5}>5 (pin 29)</MenuItem>
+                                                <MenuItem value={6} disabled={this.state.fanPin === 6 || this.state.coolingFanPin === 6 || this.state.buzzerPin === 6}>6 (pin 31)</MenuItem>
+                                                <MenuItem value={16} disabled={this.state.fanPin === 16 || this.state.coolingFanPin === 16 || this.state.buzzerPin === 16}>16 (pin 36)</MenuItem>
+                                                <MenuItem value={17} disabled={this.state.fanPin === 17 || this.state.coolingFanPin === 17 || this.state.buzzerPin === 17}>17 (pin 11)</MenuItem>
+                                                <MenuItem value={22} disabled={this.state.fanPin === 22 || this.state.coolingFanPin === 22 || this.state.buzzerPin === 22}>22 (pin 15)</MenuItem>
+                                                <MenuItem value={23} disabled={this.state.fanPin === 23 || this.state.coolingFanPin === 23 || this.state.buzzerPin === 23}>23 (pin 16)</MenuItem>
+                                                <MenuItem value={24} disabled={this.state.fanPin === 24 || this.state.coolingFanPin === 24 || this.state.buzzerPin === 24}>24 (pin 18)</MenuItem>
+                                                <MenuItem value={25} disabled={this.state.fanPin === 25 || this.state.coolingFanPin === 25 || this.state.buzzerPin === 25}>25 (pin 22)</MenuItem>
+                                                <MenuItem value={26} disabled={this.state.fanPin === 26 || this.state.coolingFanPin === 26 || this.state.buzzerPin === 26}>26 (pin 37)</MenuItem>
+                                                <MenuItem value={27} disabled={this.state.fanPin === 27 || this.state.coolingFanPin === 27 || this.state.buzzerPin === 27}>27 (pin 13)</MenuItem>
                                             </Select>
                                         </FormControl>
                                     </Grid>
@@ -277,17 +287,18 @@ class HardwareSettings extends Component {
                                         <FormControl error={this.state.coolingFanError}>
                                             <InputLabel>Cooling Fan GPIO</InputLabel>
                                             <Select value={this.state.coolingFanPin} onChange={this.handleCoolingFanChange}>
-                                                <MenuItem value={4} disabled={this.state.relayPin === 4 || this.state.fanPin === 4}>4 (pin 7)</MenuItem>
-                                                <MenuItem value={5} disabled={this.state.relayPin === 5 || this.state.fanPin === 5}>5 (pin 29)</MenuItem>
-                                                <MenuItem value={6} disabled={this.state.relayPin === 6 || this.state.fanPin === 6}>6 (pin 31)</MenuItem>
-                                                <MenuItem value={16} disabled={this.state.relayPin === 16 || this.state.fanPin === 16}>16 (pin 36)</MenuItem>
-                                                <MenuItem value={17} disabled={this.state.relayPin === 17 || this.state.fanPin === 17}>17 (pin 11)</MenuItem>
-                                                <MenuItem value={22} disabled={this.state.relayPin === 22 || this.state.fanPin === 22}>22 (pin 15)</MenuItem>
-                                                <MenuItem value={23} disabled={this.state.relayPin === 23 || this.state.fanPin === 23}>23 (pin 16)</MenuItem>
-                                                <MenuItem value={24} disabled={this.state.relayPin === 24 || this.state.fanPin === 24}>24 (pin 18)</MenuItem>
-                                                <MenuItem value={25} disabled={this.state.relayPin === 25 || this.state.fanPin === 25}>25 (pin 22)</MenuItem>
-                                                <MenuItem value={26} disabled={this.state.relayPin === 26 || this.state.fanPin === 26}>26 (pin 37)</MenuItem>
-                                                <MenuItem value={27} disabled={this.state.relayPin === 27 || this.state.fanPin === 27}>27 (pin 13)</MenuItem>
+                                                <MenuItem value={0}>Disabled</MenuItem>
+                                                <MenuItem value={4} disabled={this.state.relayPin === 4 || this.state.fanPin === 4 || this.state.buzzerPin === 4}>4 (pin 7)</MenuItem>
+                                                <MenuItem value={5} disabled={this.state.relayPin === 5 || this.state.fanPin === 5 || this.state.buzzerPin === 5}>5 (pin 29)</MenuItem>
+                                                <MenuItem value={6} disabled={this.state.relayPin === 6 || this.state.fanPin === 6 || this.state.buzzerPin === 6}>6 (pin 31)</MenuItem>
+                                                <MenuItem value={16} disabled={this.state.relayPin === 16 || this.state.fanPin === 16 || this.state.buzzerPin === 16}>16 (pin 36)</MenuItem>
+                                                <MenuItem value={17} disabled={this.state.relayPin === 17 || this.state.fanPin === 17 || this.state.buzzerPin === 17}>17 (pin 11)</MenuItem>
+                                                <MenuItem value={22} disabled={this.state.relayPin === 22 || this.state.fanPin === 22 || this.state.buzzerPin === 22}>22 (pin 15)</MenuItem>
+                                                <MenuItem value={23} disabled={this.state.relayPin === 23 || this.state.fanPin === 23 || this.state.buzzerPin === 23}>23 (pin 16)</MenuItem>
+                                                <MenuItem value={24} disabled={this.state.relayPin === 24 || this.state.fanPin === 24 || this.state.buzzerPin === 24}>24 (pin 18)</MenuItem>
+                                                <MenuItem value={25} disabled={this.state.relayPin === 25 || this.state.fanPin === 25 || this.state.buzzerPin === 25}>25 (pin 22)</MenuItem>
+                                                <MenuItem value={26} disabled={this.state.relayPin === 26 || this.state.fanPin === 26 || this.state.buzzerPin === 26}>26 (pin 37)</MenuItem>
+                                                <MenuItem value={27} disabled={this.state.relayPin === 27 || this.state.fanPin === 27 || this.state.buzzerPin === 27}>27 (pin 13)</MenuItem>
                                             </Select>
                                         </FormControl>
                                     </Grid>
@@ -296,17 +307,38 @@ class HardwareSettings extends Component {
                                         <FormControl error={this.state.fanError}>
                                             <InputLabel>Convection Fan GPIO</InputLabel>
                                             <Select value={this.state.fanPin} onChange={this.handleFanChange}>
-                                                <MenuItem value={4} disabled={this.state.relayPin === 4 || this.state.coolingFanPin === 4}>4 (pin 7)</MenuItem>
-                                                <MenuItem value={5} disabled={this.state.relayPin === 5 || this.state.coolingFanPin === 5}>5 (pin 29)</MenuItem>
-                                                <MenuItem value={6} disabled={this.state.relayPin === 6 || this.state.coolingFanPin === 6}>6 (pin 31)</MenuItem>
-                                                <MenuItem value={16} disabled={this.state.relayPin === 16 || this.state.coolingFanPin === 16}>16 (pin 36)</MenuItem>
-                                                <MenuItem value={17} disabled={this.state.relayPin === 17 || this.state.coolingFanPin === 17}>17 (pin 11)</MenuItem>
-                                                <MenuItem value={22} disabled={this.state.relayPin === 22 || this.state.coolingFanPin === 22}>22 (pin 15)</MenuItem>
-                                                <MenuItem value={23} disabled={this.state.relayPin === 23 || this.state.coolingFanPin === 23}>23 (pin 16)</MenuItem>
-                                                <MenuItem value={24} disabled={this.state.relayPin === 24 || this.state.coolingFanPin === 24}>24 (pin 18)</MenuItem>
-                                                <MenuItem value={25} disabled={this.state.relayPin === 25 || this.state.coolingFanPin === 25}>25 (pin 22)</MenuItem>
-                                                <MenuItem value={26} disabled={this.state.relayPin === 26 || this.state.coolingFanPin === 26}>26 (pin 37)</MenuItem>
-                                                <MenuItem value={27} disabled={this.state.relayPin === 27 || this.state.coolingFanPin === 27}>27 (pin 13)</MenuItem>
+                                                <MenuItem value={0}>Disabled</MenuItem>
+                                                <MenuItem value={4} disabled={this.state.relayPin === 4 || this.state.coolingFanPin === 4 || this.state.buzzerPin === 4}>4 (pin 7)</MenuItem>
+                                                <MenuItem value={5} disabled={this.state.relayPin === 5 || this.state.coolingFanPin === 5 || this.state.buzzerPin === 5}>5 (pin 29)</MenuItem>
+                                                <MenuItem value={6} disabled={this.state.relayPin === 6 || this.state.coolingFanPin === 6 || this.state.buzzerPin === 6}>6 (pin 31)</MenuItem>
+                                                <MenuItem value={16} disabled={this.state.relayPin === 16 || this.state.coolingFanPin === 16 || this.state.buzzerPin === 16}>16 (pin 36)</MenuItem>
+                                                <MenuItem value={17} disabled={this.state.relayPin === 17 || this.state.coolingFanPin === 17 || this.state.buzzerPin === 17}>17 (pin 11)</MenuItem>
+                                                <MenuItem value={22} disabled={this.state.relayPin === 22 || this.state.coolingFanPin === 22 || this.state.buzzerPin === 22}>22 (pin 15)</MenuItem>
+                                                <MenuItem value={23} disabled={this.state.relayPin === 23 || this.state.coolingFanPin === 23 || this.state.buzzerPin === 23}>23 (pin 16)</MenuItem>
+                                                <MenuItem value={24} disabled={this.state.relayPin === 24 || this.state.coolingFanPin === 24 || this.state.buzzerPin === 24}>24 (pin 18)</MenuItem>
+                                                <MenuItem value={25} disabled={this.state.relayPin === 25 || this.state.coolingFanPin === 25 || this.state.buzzerPin === 25}>25 (pin 22)</MenuItem>
+                                                <MenuItem value={26} disabled={this.state.relayPin === 26 || this.state.coolingFanPin === 26 || this.state.buzzerPin === 26}>26 (pin 37)</MenuItem>
+                                                <MenuItem value={27} disabled={this.state.relayPin === 27 || this.state.coolingFanPin === 27 || this.state.buzzerPin === 27}>27 (pin 13)</MenuItem>
+                                            </Select>
+                                        </FormControl>
+                                    </Grid>
+
+                                    <Grid item>
+                                        <FormControl error={this.state.buzzerError}>
+                                            <InputLabel>Buzzer GPIO</InputLabel>
+                                            <Select value={this.state.buzzerPin} onChange={this.handleBuzzerChange}>
+                                                <MenuItem value={0}>Disabled</MenuItem>
+                                                <MenuItem value={4} disabled={this.state.relayPin === 4 || this.state.coolingFanPin === 4 || this.state.fanPin === 4}>4 (pin 7)</MenuItem>
+                                                <MenuItem value={5} disabled={this.state.relayPin === 5 || this.state.coolingFanPin === 5 || this.state.fanPin === 5}>5 (pin 29)</MenuItem>
+                                                <MenuItem value={6} disabled={this.state.relayPin === 6 || this.state.coolingFanPin === 6 || this.state.fanPin === 6}>6 (pin 31)</MenuItem>
+                                                <MenuItem value={16} disabled={this.state.relayPin === 16 || this.state.coolingFanPin === 16 || this.state.fanPin === 16}>16 (pin 36)</MenuItem>
+                                                <MenuItem value={17} disabled={this.state.relayPin === 17 || this.state.coolingFanPin === 17 || this.state.fanPin === 17}>17 (pin 11)</MenuItem>
+                                                <MenuItem value={22} disabled={this.state.relayPin === 22 || this.state.coolingFanPin === 22 || this.state.fanPin === 22}>22 (pin 15)</MenuItem>
+                                                <MenuItem value={23} disabled={this.state.relayPin === 23 || this.state.coolingFanPin === 23 || this.state.fanPin === 23}>23 (pin 16)</MenuItem>
+                                                <MenuItem value={24} disabled={this.state.relayPin === 24 || this.state.coolingFanPin === 24 || this.state.fanPin === 24}>24 (pin 18)</MenuItem>
+                                                <MenuItem value={25} disabled={this.state.relayPin === 25 || this.state.coolingFanPin === 25 || this.state.fanPin === 25}>25 (pin 22)</MenuItem>
+                                                <MenuItem value={26} disabled={this.state.relayPin === 26 || this.state.coolingFanPin === 26 || this.state.fanPin === 26}>26 (pin 37)</MenuItem>
+                                                <MenuItem value={27} disabled={this.state.relayPin === 27 || this.state.coolingFanPin === 27 || this.state.fanPin === 27}>27 (pin 13)</MenuItem>
                                             </Select>
                                         </FormControl>
                                     </Grid>
@@ -315,7 +347,7 @@ class HardwareSettings extends Component {
                                         <TextField
                                             variant="outlined"
                                             type='number'
-                                            label='Fan off threshold'
+                                            label='Stop cooling at:'
                                             value={this.state.fanTurnoffTemp}
                                             onChange={this.handleFanTurnoffChange}
                                             onClick={(e) => this.handleOnFocus(e, this.handleFanTurnoffChange, 'fanTurnoffTemp')}

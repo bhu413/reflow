@@ -62,6 +62,10 @@ module.exports = function (app, express, socketio) {
         res.json({ status: oven.getStatus(), address: ip.address() + ":" + networkSettings.getProperty('port')});
     });
 
+    app.get("/api/historic_temperature", (req, res) => {
+        res.json(oven.getHistoricTemperature());
+    });
+
     app.get("/api/current_profile", (req, res) => {
         res.json({current_profile: oven.getCurrentProfile()});
     });
@@ -153,8 +157,8 @@ module.exports = function (app, express, socketio) {
     app.use('/api/reflow_profiles', express.static('reflow_profiles'));
 
     app.post("/api/reflow_profiles/save", (req, res) => {
-        var validCode = profile.saveProfile(req.body);
-        res.json({ status: validCode.status, message: validCode.message, new_name: validCode.new_name });
+        var validProfile = profile.saveProfile(req.body);
+        res.json(validProfile);
     });
 
     app.post("/api/reflow_profiles/delete", (req, res) => {

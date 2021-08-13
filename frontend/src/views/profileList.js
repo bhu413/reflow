@@ -1,6 +1,6 @@
 import { React, Component } from 'react';
 import Profile from '../components/Profile';
-import { Button, Grid, Dialog, DialogTitle, DialogContent, DialogActions, IconButton, Container } from '@material-ui/core';
+import { Button, Grid, Dialog, DialogTitle, DialogContent, DialogActions, IconButton, Container, Typography, Box } from '@material-ui/core';
 import { DataGrid } from '@material-ui/data-grid'
 import { Link, withRouter } from "react-router-dom";
 import axios from 'axios';
@@ -30,6 +30,8 @@ class ProfileList extends Component {
       forceLoadDialog: false,
       allowUploadDownload: !isLocal,
       deleteDialog: false,
+      saveProfileError: '',
+      saveProfileErrorDialog: false,
     });
     this.loadClicked = this.loadClicked.bind(this);
     this.forceLoadClicked = this.forceLoadClicked.bind(this);
@@ -41,6 +43,7 @@ class ProfileList extends Component {
     this.handleDeleteDialogClose = this.handleDeleteDialogClose.bind(this);
     this.deleteClicked = this.deleteClicked.bind(this);
     this.deleteProfile = this.deleteProfile.bind(this);
+    this.saveProfileErrorClose = this.saveProfileErrorClose.bind(this);
   }
 
   SelectButton = withStyles({
@@ -65,13 +68,13 @@ class ProfileList extends Component {
     {
       field: 'name',
       headerName: 'Profile Name',
-      width: 300,
+      width: 250,
     },
     {
       field: 'last_run',
       headerName: 'Last Loaded',
       type: 'dateTime',
-      width: 200,
+      width: 180,
       editable: false,
       valueFormatter: (params) => {
         if (params.value === 0) {
@@ -85,13 +88,27 @@ class ProfileList extends Component {
       field: 'date_created',
       headerName: 'Date Created',
       type: 'dateTime',
-      width: 200,
+      width: 180,
       editable: false,
       valueFormatter: (params) => {
         if (params.value === 0) {
           return 'n/a';
         } else {
           return new Date(params.value).toLocaleString();
+        }
+      }
+    },
+    {
+      field: 'is_default',
+      headerName: 'Default',
+      width: 130,
+      valueFormatter: (params) => {
+        if (!params.value) {
+          return '';
+        } else {
+          if (params.value === true) {
+            return 'Yes';
+          }
         }
       }
     }
@@ -161,6 +178,7 @@ class ProfileList extends Component {
   downloadProfile() {
     var downloadableProfile = this.state.activeItem;
     delete downloadableProfile['id'];
+    delete downloadableProfile['is_default'];
     var blob = new Blob([JSON.stringify(downloadableProfile, null, 3)], { type: "text/plain;charset=utf-8" });
     FileSaver.saveAs(blob, downloadableProfile.name + ".json");
   }
@@ -172,7 +190,11 @@ class ProfileList extends Component {
       var uploadedFile = JSON.parse(e.target.result);
       axios.post('/api/reflow_profiles/save', uploadedFile)
         .then(res => {
-          this.getData();
+          if (res.data.status === 200) {
+            this.getData();
+          } else {
+            this.setState({ saveProfileError: res.data.message, saveProfileErrorDialog: true });
+          }
         });
     };
   }
@@ -189,15 +211,31 @@ class ProfileList extends Component {
     this.setState({ deleteDialog: true });
   }
 
+  saveProfileErrorClose() {
+    this.setState({ saveProfileErrorDialog: false });
+  }
+
   render() {
+    var deleteButton = <this.DeleteButton startIcon={<DeleteIcon />} variant='contained' color='primary' onClick={this.deleteClicked}>Delete</this.DeleteButton>;
+    var downloadButton = <Button startIcon={<SaveAltIcon />} variant="contained" color="primary" onClick={this.downloadProfile}>Download</Button>;
+    if (this.state.activeItem) {
+      if (this.state.activeItem.hasOwnProperty('is_default')) {
+        if (this.state.activeItem.is_default === true) {
+          deleteButton = <></>;
+        }
+      }
+    }
+
     return (
       <>
         <StatusBar />
-        <Dialog onClose={this.handleDialogClose} open={this.state.dialog} fullWidth={true}>
+        <Dialog onClose={this.handleDialogClose} open={this.state.dialog} maxWidth='lg' fullWidth>
           <DialogTitle>
             <Grid container justifyContent='space-between'>
               <Grid item>
-                {this.state.activeItem.name}
+                <Typography noWrap style={{width: 450, paddingTop: 10}}>
+                  {this.state.activeItem.name}
+                </Typography>
               </Grid>
               <Grid item>
                 <IconButton aria-label="close" onClick={this.handleDialogClose}>
@@ -207,21 +245,21 @@ class ProfileList extends Component {
             </Grid>
           </DialogTitle>
           <DialogContent>
-            <div style={{width: '91%'}}>
-              <Profile draggable={false} profile={this.state.activeItem} historicTemps={[]} />
-            </div>
+            <Grid container justifyContent='center'>
+              <Box width="73%" alignItems='center'>
+                <Profile draggable={false} profile={this.state.activeItem} historicTemps={[]} />
+              </Box>
+            </Grid>
           </DialogContent>
           <DialogActions>
             <Grid container justifyContent='space-between'>
               <Grid item>
-                <this.DeleteButton startIcon={<DeleteIcon />} variant='contained' color='primary' onClick={this.deleteClicked}>Delete</this.DeleteButton>
+                {deleteButton}
               </Grid>
               <Grid item>
                 <Grid container spacing={2}>
                   <Grid item>
-                    {this.state.allowUploadDownload &&
-                      <Button startIcon={<SaveAltIcon />} variant="contained" color="primary" onClick={this.downloadProfile}>Download</Button>
-                    }
+                    {this.state.allowUploadDownload && downloadButton}
                   </Grid>
                   <Grid item>
                     <Button component={Link} to={{ pathname: '/editProfile', state: { profile: this.state.activeItem } }} startIcon={<EditIcon />} variant="contained" color="primary">Edit</Button>
@@ -243,10 +281,10 @@ class ProfileList extends Component {
             Stop oven and load profile?
           </DialogContent>
           <DialogActions>
-            <Button onClick={this.handleForceDialogClose} color="primary">
+            <Button onClick={this.handleForceDialogClose} color="primary" variant='contained'>
               Cancel
             </Button>
-            <Button onClick={this.forceLoadClicked} color="primary" autoFocus>
+            <Button onClick={this.forceLoadClicked} color="primary" variant='contained'>
               Force Load
             </Button>
           </DialogActions>
@@ -260,42 +298,57 @@ class ProfileList extends Component {
             Are you sure you want to delete "{this.state.activeItem.name}"?
           </DialogContent>
           <DialogActions>
-            <Button onClick={this.handleDeleteDialogClose} color="primary">
+            <Button onClick={this.handleDeleteDialogClose} color="primary" variant='contained'>
               Cancel
             </Button>
-            <Button onClick={this.deleteProfile} color="primary" autoFocus>
+            <Button onClick={this.deleteProfile} color="primary" variant='contained'>
               Yes
             </Button>
           </DialogActions>
         </Dialog>
 
+        <Dialog open={this.state.saveProfileErrorDialog} onClose={this.saveProfileErrorClose}>
+          <DialogTitle>
+            Error saving profile
+          </DialogTitle>
+          <DialogContent>
+            {this.state.saveProfileError}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={this.saveProfileErrorClose} color="primary" variant='contained'>
+              OK
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+
         <Container maxWidth={false}>
-          <Grid container direction={"row"} align={"center"} justifyContent={"center"} spacing={2}>
-            <Grid item xs={12} lg={12} style={{paddingTop: '20px'}}>
-              <DataGrid
-                rows={this.state.profiles}
-                rowHeight={45}
-                columns={this.columns}
-                pageSize={5}
-                checkboxSelection={false}
-                disableMultipleSelection={true}
-                onRowClick={this.handleItemClick}
-                autoHeight={true}
-              />
-            </Grid>
-          </Grid>
+          <div style={{ height: window.innerHeight - 120, paddingBottom: 10, paddingTop: 10 }}>
+            <DataGrid
+              rows={this.state.profiles}
+              rowHeight={45}
+              columns={this.columns}
+              pagination={true}
+              autoPageSize
+              checkboxSelection={false}
+              disableMultipleSelection={true}
+              onRowClick={this.handleItemClick}
+              sortingOrder={['desc', 'asc', null]}
+              sortModel={[{ field: 'is_default', sort: 'desc' }]}
+            />
+          </div>
         </Container>
-        
+
         <Container maxWidth={false}>
-          <Grid container spacing={3} justifyContent="flex-end">
-            <Grid item>
+          <Grid container spacing={3} justifyContent="flex-end" >
+            <Grid item >
               <Button component={Link} to="/" startIcon={<CancelIcon />} variant="contained" color="primary">Cancel</Button>
             </Grid>
-              {this.state.allowUploadDownload &&
-                <Grid item>
-              <Button startIcon={<PublishIcon />} variant="contained" color="primary" component="label" >Upload<input type="file" accept="application/JSON" hidden onChange={this.fileChanged} /></Button>
-                </Grid>
-              }
+            {this.state.allowUploadDownload &&
+              <Grid item>
+                <Button startIcon={<PublishIcon />} variant="contained" color="primary" component="label" >Upload<input type="file" accept="application/JSON" hidden onChange={this.fileChanged} /></Button>
+              </Grid>
+            }
             <Grid item>
               <Button component={Link} to={{
                 pathname: '/editProfile', state: {
@@ -329,13 +382,15 @@ class ProfileList extends Component {
                         y: 30
                       }
                     ]
-              } } }} startIcon={<NoteAddIcon />} variant="contained" color="primary" >Create New</Button>
+                  }
+                }
+              }} startIcon={<NoteAddIcon />} variant="contained" color="primary" >Create New</Button>
             </Grid>
           </Grid>
         </Container>
 
 
-        
+
       </>
     );
   }

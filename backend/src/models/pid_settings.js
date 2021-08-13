@@ -13,6 +13,9 @@ module.exports.saveSettings = function (settings) {
     if (settings.hasOwnProperty('d')) {
         currentSettings.d = parseFloat(settings.d);
     }
+    if (settings.hasOwnProperty('use_cooling_fan')) {
+        currentSettings.use_cooling_fan = settings.use_cooling_fan;
+    }
     if (settings.hasOwnProperty('look_ahead')) {
         currentSettings.look_ahead = parseInt(settings.look_ahead, 10);
     }

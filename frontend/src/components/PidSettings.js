@@ -23,6 +23,7 @@ class PidSettings extends Component {
             p: 0,
             i: 0,
             d: 0,
+            useCoolingFan: false,
             lookAhead: 0,
             preheat: false,
             preheatPower: 0,
@@ -37,6 +38,7 @@ class PidSettings extends Component {
         this.handlePChange = this.handlePChange.bind(this);
         this.handleIChange = this.handleIChange.bind(this);
         this.handleDChange = this.handleDChange.bind(this);
+        this.handleCoolingFanChange = this.handleCoolingFanChange.bind(this);
         this.handlePreheatChange = this.handlePreheatChange.bind(this);
         this.handleLookAheadChange = this.handleLookAheadChange.bind(this);
         this.handlePreheatPowerChange = this.handlePreheatPowerChange.bind(this);
@@ -55,6 +57,7 @@ class PidSettings extends Component {
                     p: result.p,
                     i: result.i,
                     d: result.d,
+                    useCoolingFan: result.use_cooling_fan,
                     lookAhead: result.look_ahead,
                     preheat: result.preheat,
                     preheatPower: result.preheat_power,
@@ -68,6 +71,7 @@ class PidSettings extends Component {
         newSettings.p = this.state.p;
         newSettings.i = this.state.i;
         newSettings.d = this.state.d;
+        newSettings.use_cooling_fan = this.state.useCoolingFan;
         newSettings.look_ahead = this.state.lookAhead;
         newSettings.preheat = this.state.preheat;
         newSettings.preheat_power = this.state.preheatPower;
@@ -90,6 +94,10 @@ class PidSettings extends Component {
 
     handleDChange(e) {
         this.setState({ d: e.target.value, inputChanged: true });
+    }
+
+    handleCoolingFanChange(e) {
+        this.setState({ useCoolingFan: e.target.checked, inputChanged: true });
     }
 
     handleLookAheadChange(e) {
@@ -227,6 +235,14 @@ class PidSettings extends Component {
                                     </Grid>
                                 </Grid>
                             </Grid>
+
+                            <Grid item>
+                                <Typography align='left'>
+                                    Use cooling fan with PID
+                                </Typography>
+                                <Checkbox checked={this.state.useCoolingFan} onChange={this.handleCoolingFanChange} color='primary' />
+                            </Grid>
+
                             <Grid item>
                                 <Typography align='left'>
                                     Look Ahead
@@ -243,6 +259,7 @@ class PidSettings extends Component {
                                     }}
                                 />
                             </Grid>
+
                             <Grid item>
                                 <Grid container spacing={3}>
                                     <Grid item>

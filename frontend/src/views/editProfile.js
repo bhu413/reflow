@@ -28,6 +28,43 @@ import { withTheme } from '@material-ui/styles';
 class EditProfile extends Component {
   constructor(props) {
     super(props);
+
+    if (!this.props.location.state) {
+      this.props.location.state = {
+        profile: {
+          name: "new_profile",
+          date_created: Date.now(),
+          last_run: 0,
+          datapoints: [
+            {
+              x: 0,
+              y: 30
+            },
+            {
+              x: 75,
+              y: 30
+            },
+            {
+              x: 150,
+              y: 30
+            },
+            {
+              x: 225,
+              y: 30
+            },
+            {
+              x: 300,
+              y: 30
+            },
+            {
+              x: 375,
+              y: 30
+            }
+          ]
+        }
+      };
+    }
+
     this.state = ({
       loadDialog: false,
       forceLoadDialog: false,
@@ -37,14 +74,18 @@ class EditProfile extends Component {
       newProfile: this.props.location.state.profile,
       currentX: this.props.location.state.profile.datapoints[0].x,
       currentY: this.props.location.state.profile.datapoints[0].y,
-      maxTime: 400,
+      maxTime: 300,
       maxNodes: 6,
       currentPoint: 0,
+      slope: 'N/A',
       showHistory: false,
       keyboardLayout: 'default',
+      saveProfileError: '',
+      saveProfileErrorDialog: false,
       tempHistory: this.props.location.state.tempHistory || [],
       isLocal: window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
     });
+    
     this.saveProfile = this.saveProfile.bind(this);
     this.handleInputChange = this.handleInputChange.bind(this);
     this.goBack = this.goBack.bind(this);
@@ -67,6 +108,26 @@ class EditProfile extends Component {
     this.addNode = this.addNode.bind(this);
     this.subtractNode = this.subtractNode.bind(this);
     this.showHistoryClicked = this.showHistoryClicked.bind(this);
+    this.calculateSlopeAtPoint = this.calculateSlopeAtPoint.bind(this);
+    this.saveProfileErrorClose = this.saveProfileErrorClose.bind(this);
+  }
+
+  calculateSlopeAtPoint(index) {
+    if (index === 0) {
+      this.setState({ slope: 'Infinity' });
+    } else {
+      if (this.state.newProfile.datapoints[index - 1].x === this.state.newProfile.datapoints[index].x) {
+        if (this.state.newProfile.datapoints[index - 1].y < this.state.newProfile.datapoints[index].y) {
+          this.setState({ slope: 'Infinity' });
+        } else {
+          this.setState({ slope: '-Infinity' });
+        }
+      } else {
+        var rise = this.state.newProfile.datapoints[index - 1].y - this.state.newProfile.datapoints[index].y;
+        var run = this.state.newProfile.datapoints[index - 1].x - this.state.newProfile.datapoints[index].x
+        this.setState({ slope: Number.parseFloat(rise / run).toFixed(2) });
+      }
+    }
   }
 
   addX() {
@@ -74,6 +135,7 @@ class EditProfile extends Component {
       var tempProfile = this.state.newProfile;
       tempProfile.datapoints[this.state.currentPoint].x += 1;
       this.setState({ newProfile: tempProfile, currentX: this.state.currentX + 1 });
+      this.calculateSlopeAtPoint(this.state.currentPoint);
     }
   }
 
@@ -82,6 +144,7 @@ class EditProfile extends Component {
       var tempProfile = this.state.newProfile;
       tempProfile.datapoints[this.state.currentPoint].x -= 1;
       this.setState({ newProfile: tempProfile, currentX: this.state.currentX - 1 });
+      this.calculateSlopeAtPoint(this.state.currentPoint);
     }
   }
 
@@ -90,6 +153,7 @@ class EditProfile extends Component {
       var tempProfile = this.state.newProfile;
       tempProfile.datapoints[this.state.currentPoint].y += 1;
       this.setState({ newProfile: tempProfile, currentY: this.state.currentY + 1 });
+      this.calculateSlopeAtPoint(this.state.currentPoint);
     }
   }
 
@@ -98,12 +162,13 @@ class EditProfile extends Component {
       var tempProfile = this.state.newProfile;
       tempProfile.datapoints[this.state.currentPoint].y -= 1;
       this.setState({ newProfile: tempProfile, currentY: this.state.currentY - 1 });
+      this.calculateSlopeAtPoint(this.state.currentPoint);
     }
   }
 
   addTime() {
-    if (this.state.maxTime < 2000) {
-      this.setState({maxTime: this.state.maxTime + 100})
+    if (this.state.maxTime < 20000) {
+      this.setState({ maxTime: this.state.maxTime + 100 })
     }
   }
 
@@ -114,7 +179,7 @@ class EditProfile extends Component {
   }
 
   addNode() {
-    if (this.state.newProfile.datapoints.length < 10) {
+    if (this.state.newProfile.datapoints.length < 20) {
       var tempProfile = this.state.newProfile;
       var newPoint = {};
       if (this.state.currentPoint === this.state.newProfile.datapoints.length - 1) {
@@ -135,7 +200,8 @@ class EditProfile extends Component {
         tempProfile.datapoints.splice(this.state.currentPoint + 1, 0, newPoint);
         this.setState({ currentPoint: this.state.currentPoint + 1, currentX: newPoint.x, currentY: newPoint.y });
       }
-      this.setState({ newProfile: tempProfile, maxNodes: this.state.maxNodes + 1});
+      this.setState({ newProfile: tempProfile, maxNodes: this.state.maxNodes + 1 });
+      
     }
   }
 
@@ -148,6 +214,7 @@ class EditProfile extends Component {
           currentX: this.state.newProfile.datapoints[this.state.currentPoint].x,
           currentY: this.state.newProfile.datapoints[this.state.currentPoint].y
         });
+        this.calculateSlopeAtPoint(this.state.currentPoint);
       } else {
         tempProfile.datapoints.splice(this.state.currentPoint, 1);
         this.setState({
@@ -155,19 +222,22 @@ class EditProfile extends Component {
           currentX: this.state.newProfile.datapoints[this.state.currentPoint - 1].x,
           currentY: this.state.newProfile.datapoints[this.state.currentPoint - 1].y
         });
+        this.calculateSlopeAtPoint(this.state.currentPoint - 1);
       }
       this.setState({ newProfile: tempProfile, maxNodes: this.state.maxNodes - 1 });
     }
   }
 
   dragStart(e, datasetIndex, index, value) {
-    this.setState({ currentPoint: index });
+    this.setState({ currentPoint: index, currentX: value.x, currentY: value.y });
+    this.calculateSlopeAtPoint(index);
   }
 
   drag(e, datasetIndex, index, value) {
     var tempProfile = this.state.newProfile;
     tempProfile.datapoints[index] = value;
     this.setState({ currentX: value.x, currentY: value.y, newProfile: tempProfile });
+    this.calculateSlopeAtPoint(index);
   }
 
   dragEnd(e, datasetIndex, index, value) {
@@ -191,6 +261,7 @@ class EditProfile extends Component {
       }
     }
     this.setState({ currentX: value.x, currentY: value.y, currentPoint: index, newProfile: tempProfile });
+    this.calculateSlopeAtPoint(index);
   }
 
   handleInputChange(e) {
@@ -198,7 +269,7 @@ class EditProfile extends Component {
     tempProfile.name = e.target.value;
     this.setState({ newProfile: tempProfile });
   }
-  
+
   componentDidMount() {
     this.setState({
       maxTime: Math.ceil(this.state.newProfile.datapoints[this.state.newProfile.datapoints.length - 1].x / 100) * 100,
@@ -239,21 +310,25 @@ class EditProfile extends Component {
   }
 
   cancelClicked() {
-    this.setState({ loadDialog: false, forceLoadDialog: false});
+    this.setState({ loadDialog: false, forceLoadDialog: false });
   }
 
   saveProfile() {
-    this.setState({enterNameDialog: false});
+    this.setState({ enterNameDialog: false });
     var tempProfile = this.state.newProfile;
     tempProfile.date_created = Date.now();
     tempProfile.last_run = 0;
     this.setState({ newProfile: tempProfile });
     axios.post('/api/reflow_profiles/save', this.state.newProfile)
       .then(res => {
-        var tempProfile = this.state.newProfile;
-        tempProfile.name = res.data.new_name;
-        this.setState({ newProfile: tempProfile });
-        this.setState({ loadDialog: true });
+        console.log(res.data);
+        if (res.data.status === 200) {
+          this.setState({ newProfile: res.data.new_profile });
+          this.setState({ loadDialog: true });
+        } else {
+          this.setState({saveProfileError: res.data.message, saveProfileErrorDialog: true});
+        }
+        
       });
 
   }
@@ -312,7 +387,12 @@ class EditProfile extends Component {
     this.setState({ showHistory: e.target.checked });
   }
 
+  saveProfileErrorClose() {
+    this.setState({ saveProfileErrorDialog: false });
+  }
+
   render() {
+    
     var keyboard = <></>;
     if (this.state.isLocal) {
       keyboard = <Keyboard
@@ -347,29 +427,34 @@ class EditProfile extends Component {
 
     var historySwitch = <></>;
     if (this.state.tempHistory.length > 1) {
-      historySwitch = <Grid item>
-        <Paper>
-          <Grid container justifyContent="space-evenly">
-            <Grid item>
-              <Typography style={{ paddingLeft: 10 }}>History</Typography>
+      historySwitch =
+        <Grid item>
+          <Paper>
+            <Grid container justifyContent="space-evenly">
+              <Grid item>
+                <Typography style={{ paddingLeft: 10 }}>Measured</Typography>
+              </Grid>
+              <Grid item>
+                <Switch
+                  checked={this.state.showHistory}
+                  onChange={this.showHistoryClicked}
+                  size='small'
+                  color='secondary'
+                />
+              </Grid>
             </Grid>
-            <Grid item>
-              <Switch
-                checked={this.state.showHistory}
-                onChange={this.showHistoryClicked}
-                size='small'
-                color='secondary'
-              />
-            </Grid>
-          </Grid>
-        </Paper>
-      </Grid>;
+          </Paper>
+        </Grid>;
     }
 
     var historicDatapoints = []
     if (this.state.showHistory) {
       historicDatapoints = this.state.tempHistory;
     }
+
+    //https://stackoverflow.com/questions/9461621/format-a-number-as-2-5k-if-a-thousand-or-more-otherwise-900
+    var formattedTime = Math.abs(this.state.maxTime) > 999 ? Math.sign(this.state.maxTime) * ((Math.abs(this.state.maxTime) / 1000).toFixed(1)) + 'k' : Math.sign(this.state.maxTime) * Math.abs(this.state.maxTime);
+
 
     return (
       <>
@@ -387,6 +472,20 @@ class EditProfile extends Component {
             </Button>
             <Button onClick={this.loadClicked} color="primary" variant='contained' autoFocus>
               Load
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        <Dialog open={this.state.saveProfileErrorDialog} onClose={this.saveProfileErrorClose}>
+          <DialogTitle>
+            Error saving profile
+          </DialogTitle>
+          <DialogContent>
+            {this.state.saveProfileError}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={this.saveProfileErrorClose} color="primary" variant='contained'>
+              OK
             </Button>
           </DialogActions>
         </Dialog>
@@ -439,15 +538,18 @@ class EditProfile extends Component {
             <Grid item sm={2} lg={2}>
 
               <Hidden xsDown>
-                <Grid container spacing={1} direction="column" style={{ paddingTop: '20px' }} >
+                <Grid container spacing={1} direction="column" style={{ paddingTop: '5px' }} >
                   <Grid item align='center'>
-                    <Typography variant='h5'>
+                    <Typography variant='h6'>
                       ({this.state.currentX}, {this.state.currentY})
+                    </Typography>
+                    <Typography style={{ fontSize: 13 }}>
+                      {this.state.slope} °C/Second
                     </Typography>
                   </Grid>
 
-                  <Grid item>
-                    <Paper>
+                  <Grid item style={{minWidth: 180}}>
+                    <Paper >
                       <Grid item align='center'>
                       </Grid>
                       <Grid item align='center'>
@@ -458,7 +560,7 @@ class EditProfile extends Component {
                           <Grid item>
                             <IconButton color='primary' size='small' onClick={this.subtractX}><ArrowBackIcon /></IconButton>
                           </Grid>
-                          <Grid item align='center' style={{ minWidth: 10 }}>
+                          <Grid item align='center' style={{ minWidth: 15 }}>
 
                           </Grid>
                           <Grid item>
@@ -482,8 +584,8 @@ class EditProfile extends Component {
                         <Grid item>
                           <IconButton color='primary' size='small' onClick={this.subtractNode}><RemoveIcon /></IconButton>
                         </Grid>
-                        <Grid item align='center'>
-                          <Typography variant='h6' >{this.state.maxNodes}</Typography>
+                        <Grid item align='center' >
+                          <Typography variant='h6' style={{ minWidth: 40 }} >{this.state.maxNodes}</Typography>
                         </Grid>
                         <Grid item>
                           <IconButton color='primary' size='small' onClick={this.addNode}><AddIcon /></IconButton>
@@ -501,8 +603,8 @@ class EditProfile extends Component {
                         <Grid item>
                           <IconButton color='primary' size='small' onClick={this.subtractTime}><RemoveIcon /></IconButton>
                         </Grid>
-                        <Grid item align='center'>
-                          <Typography variant='h6' >{this.state.maxTime}</Typography>
+                        <Grid item align='center' >
+                          <Typography variant='h6' style={{ minWidth: 40, fontSize: 17 }}>{formattedTime}</Typography>
                         </Grid>
                         <Grid item>
                           <IconButton color='primary' size='small' onClick={this.addTime}><AddIcon /></IconButton>
@@ -515,12 +617,12 @@ class EditProfile extends Component {
 
                 </Grid>
               </Hidden>
-              
+
             </Grid>
 
             <Grid item sm={10}>
               <Hidden smDown>
-                <Typography align='center' variant='h5'>
+                <Typography align='center' variant='h5' style={{ paddingTop: "20px" }}>
                   <u>{this.state.newProfile.name}</u>
                 </Typography>
               </Hidden>
@@ -539,13 +641,13 @@ class EditProfile extends Component {
             </Grid>
           </Grid>
         </Container>
-        
+
         <Container maxWidth={false}>
           <Grid container spacing={3} alignItems="center" justifyContent="space-between" style={{ paddingTop: '15px' }}>
-            <Grid item xs={4}>
+            <Grid item xs={7}>
               <Hidden mdUp>
-                <Paper style={{ padding: '6px 7px 6px 10px' }}>
-                  <Typography>
+                <Paper style={{ padding: '6px 7px 6px 10px', minWidth: 420 }}>
+                  <Typography noWrap style={{ width: 410 }}>
                     Profile: {this.state.newProfile.name}
                   </Typography>
                 </Paper>
@@ -563,7 +665,7 @@ class EditProfile extends Component {
             </Grid>
           </Grid>
         </Container>
-        
+
         {/*<Keyboard theme={"hg-theme-default"} />*/}
       </>
     );

@@ -20,7 +20,7 @@ import ToysIcon from '@material-ui/icons/Toys';
 import Snackbar from '@material-ui/core/Snackbar';
 import MuiAlert from '@material-ui/lab/Alert';
 import WifiTetheringIcon from '@material-ui/icons/WifiTethering';
-import { ListItem, Drawer, ListItemText, ListItemIcon, Divider, Dialog, DialogTitle, DialogContent } from '@material-ui/core';
+import { ListItem, SwipeableDrawer, ListItemText, ListItemIcon, Divider, Dialog, DialogTitle, DialogContent } from '@material-ui/core';
 import { LinearProgress, Grid } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
 import { withRouter } from "react-router-dom";
@@ -33,8 +33,6 @@ import CircularProgress from '@material-ui/core/CircularProgress';
 class StatusBar extends Component {
     constructor(props) {
         super(props);
-        this.componentDidMount = this.componentDidMount.bind(this);
-        this.componentWillUnmount = this.componentWillUnmount.bind(this);
         this.drawerChange = this.drawerChange.bind(this);
         this.stop = this.stop.bind(this);
         this.qrClicked = this.qrClicked.bind(this);
@@ -57,7 +55,8 @@ class StatusBar extends Component {
             coolingFanOn: false,
             fanOn: false,
             connected: true,
-            backdrop: false
+            backdrop: false,
+            isLocal: window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
         };
     }
 
@@ -226,6 +225,8 @@ class StatusBar extends Component {
             fanIcon = <this.ConvectionOn />
         }
 
+        const iOS = process.browser && /iPad|iPhone|iPod/.test(navigator.userAgent);
+
         return (
             <>
                 <Snackbar anchorOrigin={{
@@ -313,9 +314,11 @@ class StatusBar extends Component {
                                 </Grid>
                             </Hidden>
                             <Grid item>
-                                <Typography align='center' style={{fontWeight: 'bold'}} >
-                                    {this.state.currentProfile.name}
-                                </Typography>
+                                <Hidden xsDown>
+                                    <Typography noWrap style={{ fontWeight: 'bold', width: window.innerWidth - 650 }} >
+                                        {this.state.currentProfile.name}
+                                    </Typography>
+                                </Hidden>
                             </Grid>
                         </Grid>
                         <div style={{ marginLeft: 'auto' }}>
@@ -328,7 +331,12 @@ class StatusBar extends Component {
                     <LinearProgress style={{height: 5}} variant="determinate" color='secondary' value={this.state.percentage} />
                 </AppBar>
 
-                <Drawer open={this.state.drawer} onClose={this.drawerChange} >
+                <SwipeableDrawer
+                    open={this.state.drawer}
+                    onClose={this.drawerChange}
+                    disableDiscovery={iOS}
+                    disableBackdropTransition={!iOS}
+                >
                     <ListItem button key={"menu"} onClick={this.drawerChange} style={{minHeight: 50}}>
                         <ListItemIcon><MenuOpenIcon /></ListItemIcon>
                     </ListItem>
@@ -349,7 +357,7 @@ class StatusBar extends Component {
                         <ListItemIcon><WifiTetheringIcon /></ListItemIcon>
                         <ListItemText>Server Address</ListItemText>
                     </ListItem>
-                </Drawer>
+                </SwipeableDrawer>
             </>
         );
     }
