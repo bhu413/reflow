@@ -578,6 +578,7 @@ module.exports = function (socketio, tempSensor) {
             coolDown(false);
             if (temperature == -1) {
                 sendMessage('error', 'Unable to start. Thermocouple disconnected.');
+                beepBuzzer(3);
             }
             return -1;
         }
