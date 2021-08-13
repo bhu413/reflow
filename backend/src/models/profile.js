@@ -17,7 +17,14 @@ function validate(profileIn) {
     //datapoints must be in order
     var profileToSave = {};
     if (profileIn.hasOwnProperty('name')) {
-        profileToSave.name = sanitize(profileIn.name);
+        if (profileIn.name.length < 1) {
+            return { status: 406, message: 'Profile name cannot be blank' };
+        } else {
+            profileToSave.name = sanitize(profileIn.name);
+            if (profileToSave.name.length === 0) {
+                return { status: 406, message: 'Profile name contains all illegal characters' };
+            }
+        }
     } else {
         return { status: 406, message: 'Profile name is required' };
     }
@@ -95,8 +102,13 @@ module.exports.saveProfile = function(profile) {
     var tempName = validProfile.new_profile.name;
     var i = 1;
     while (profileList.includes(tempName + '.json')) {
-        tempName = validProfile.new_profile.name + '-' + i;
-        i++;
+        if (tempName.includes('(' + i + ')')) {
+            if (tempName.substring(tempName.length - 3, tempName.length) === '(' + i + ')') {
+                tempName = tempName.substring(0, tempName.length - 3) + '(' + ++i + ')';
+            }
+        } else {
+            tempName = validProfile.new_profile.name + '(' + i + ')';
+        }
     }
 
     validProfile.new_profile.name = tempName;
