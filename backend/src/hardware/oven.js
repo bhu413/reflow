@@ -472,12 +472,6 @@ module.exports = function (socketio, tempSensor) {
             }
 
             if (peakMode) {
-                if (offset > 300) {
-                    module.stop();
-                    coolDown(false);
-                    sendMessage('error', 'Could not reach peak after attempting for 5 minutes');
-                    return -1;
-                }
                 ctr.setTarget(peak.y);
                 offset++;
                 if (temperature > peak.y - 2) {
@@ -503,9 +497,14 @@ module.exports = function (socketio, tempSensor) {
             if (controlVariable > 0) {
                 relayOn(controlVariable);
                 coolingFanOff();
-            } else if (controlVariable < 0 && useCoolingFan) {
-                coolingFanOn(controlVariable * -1);
+            } else if (controlVariable < 0) {
                 relayOff();
+                if (useCoolingFan) {
+                    coolingFanOn(controlVariable * -1);
+                }
+            } else {
+                relayOff();
+                coolingFanOff();
             }
 
             if (currentX + lookAhead - offset >= firstCoolingPoint.x) {

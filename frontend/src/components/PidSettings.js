@@ -102,7 +102,13 @@ class PidSettings extends Component {
 
     handleLookAheadChange(e) {
         if (e.target.value >= 0) {
-            this.setState({ lookAhead: parseInt(e.target.value), inputChanged: true });
+            if (e.target.value == '') {
+                this.setState({ lookAhead: e.target.value, inputChanged: true });
+            } else if (e.target.value == '-') {
+                this.setState({ lookAhead: -0, inputChanged: true });
+            } else {
+                this.setState({ lookAhead: parseInt(e.target.value), inputChanged: true });
+            }
         }
     }
 
@@ -188,10 +194,10 @@ class PidSettings extends Component {
                                 onKeyPress={this.handleKeyboardInput}
                                 layout={{
                                     default: [
-                                        "7 8 9",
-                                        "4 5 6",
-                                        "1 2 3",
-                                        "0 . {bksp}"
+                                        "7 8 9 {bksp}",
+                                        "4 5 6 ",
+                                        "1 2 3 ",
+                                        "0 . - "
                                     ]
                                 }}
                                 display={{
