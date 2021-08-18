@@ -254,7 +254,7 @@ class StatusBar extends Component {
                     <DialogContent>
                         <Grid container alignItems='center' direction='column'>
                             <Grid item>
-                                <QRCode value={"http://" + this.state.address} size={200} />
+                                {/* <QRCode value={"http://" + this.state.address} size={200} /> */}
                             </Grid>
                             <Grid item>
                                 Note: this control panel can only be accessed by the 12 EE lab computers.

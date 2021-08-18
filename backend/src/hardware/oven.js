@@ -412,7 +412,7 @@ module.exports = function (socketio, tempSensor) {
                 clearInterval(preheatInterval);
                 followProfile();
             } else {
-                relayOn(preheatPower * 100);
+                relayOn(preheatPower * 10);
                 tempHistory = [];
                 tempHistory.push({ x: currentX, y: temperature });
             }

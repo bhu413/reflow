@@ -24,6 +24,11 @@ module.exports.saveSettings = function (settings) {
     }
     if (settings.hasOwnProperty('preheat_power')) {
         currentSettings.preheat_power = parseInt(settings.preheat_power, 10);
+        if (currentSettings.preheat_power < 0) {
+            currentSettings.preheat_power = 0;
+        } else if (currentSettings.preheat_power > 100) {
+            currentSettings.preheat_power = 100;
+        }
     }
     if (settings.hasOwnProperty('always_hit_peak')) {
         currentSettings.always_hit_peak = settings.always_hit_peak;

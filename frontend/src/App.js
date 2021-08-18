@@ -100,10 +100,12 @@ class App extends Component {
   }
 
   appIdle() {
+    /*
     if (this.state.isLocal) {
       this.setState({ locked: true });
       localStorage.setItem('locked', 'true');
     }
+    */
   }
 
   handlePasswordEnter(e) {

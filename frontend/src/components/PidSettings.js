@@ -86,14 +86,23 @@ class PidSettings extends Component {
 
     handlePChange(e) {
         this.setState({ p: e.target.value, inputChanged: true });
+        if (isNaN(parseFloat(e.target.value))) {
+            this.setState({ inputChanged: false });
+        }
     }
 
     handleIChange(e) {
         this.setState({ i: e.target.value, inputChanged: true });
+        if (isNaN(parseFloat(e.target.value))) {
+            this.setState({ inputChanged: false });
+        }
     }
 
     handleDChange(e) {
         this.setState({ d: e.target.value, inputChanged: true });
+        if (isNaN(parseFloat(e.target.value))) {
+            this.setState({ inputChanged: false });
+        }
     }
 
     handleCoolingFanChange(e) {
@@ -101,14 +110,9 @@ class PidSettings extends Component {
     }
 
     handleLookAheadChange(e) {
-        if (e.target.value >= 0) {
-            if (e.target.value == '') {
-                this.setState({ lookAhead: e.target.value, inputChanged: true });
-            } else if (e.target.value == '-') {
-                this.setState({ lookAhead: -0, inputChanged: true });
-            } else {
-                this.setState({ lookAhead: parseInt(e.target.value), inputChanged: true });
-            }
+        this.setState({ lookAhead: e.target.value, inputChanged: true });
+        if (isNaN(parseInt(e.target.value, 10))) {
+            this.setState({ inputChanged: false });
         }
     }
 
@@ -117,8 +121,9 @@ class PidSettings extends Component {
     }
 
     handlePreheatPowerChange(e) {
-        if (e.target.value >= 0 && e.target.value <= 100) {
-            this.setState({ preheatPower: e.target.value, inputChanged: true });
+        this.setState({ preheatPower: e.target.value, inputChanged: true });
+        if (isNaN(parseInt(e.target.value, 10))) {
+            this.setState({ inputChanged: false });
         }
     }
 
@@ -231,13 +236,13 @@ class PidSettings extends Component {
                             <Grid item>
                                 <Grid container spacing={2}>
                                     <Grid item>
-                                        <TextField id='p' variant="outlined" type='number' label='Proportional' value={this.state.p} onChange={this.handlePChange} onClick={(e) => this.handleOnFocus(e, this.handlePChange, 'p')} style={{ width: 150 }} />
+                                        <TextField variant="outlined" label='Proportional' value={this.state.p} onChange={this.handlePChange} onClick={(e) => this.handleOnFocus(e, this.handlePChange, 'p')} style={{ width: 150 }} />
                                     </Grid>
                                     <Grid item>
-                                        <TextField variant="outlined" type='number' label='Integral' value={this.state.i} onChange={this.handleIChange} onClick={(e) => this.handleOnFocus(e, this.handleIChange, 'i')} style={{ width: 150 }} />
+                                        <TextField variant="outlined" label='Integral' value={this.state.i} onChange={this.handleIChange} onClick={(e) => this.handleOnFocus(e, this.handleIChange, 'i')} style={{ width: 150 }} />
                                     </Grid>
                                     <Grid item>
-                                        <TextField variant="outlined" type='number' label='Derivative' value={this.state.d} onChange={this.handleDChange} onClick={(e) => this.handleOnFocus(e, this.handleDChange, 'd')} style={{ width: 150 }} />
+                                        <TextField variant="outlined" label='Derivative' value={this.state.d} onChange={this.handleDChange} onClick={(e) => this.handleOnFocus(e, this.handleDChange, 'd')} style={{ width: 150 }} />
                                     </Grid>
                                 </Grid>
                             </Grid>
@@ -255,7 +260,6 @@ class PidSettings extends Component {
                                 </Typography>
                                 <TextField
                                     variant="outlined"
-                                    type='number'
                                     value={this.state.lookAhead}
                                     onChange={this.handleLookAheadChange}
                                     onClick={(e) => this.handleOnFocus(e, this.handleLookAheadChange, 'lookAhead')}
@@ -277,7 +281,6 @@ class PidSettings extends Component {
                                     <Grid item>
                                         <TextField
                                             variant="outlined"
-                                            type='number'
                                             label='Preheat Power'
                                             value={this.state.preheatPower}
                                             onChange={this.handlePreheatPowerChange}

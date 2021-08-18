@@ -18,6 +18,9 @@ module.exports.saveSettings = function (settings) {
     }
     if (settings.hasOwnProperty('fan_turnoff_temp')) {
         currentSettings.fan_turnoff_temp = parseInt(settings.fan_turnoff_temp, 10);
+        if (currentSettings.fan_turnoff_temp < 0) {
+            currentSettings.fan_turnoff_temp = 0;
+        }
     }
     if (settings.hasOwnProperty('thermocouple_offset')) {
         currentSettings.thermocouple_offset = parseFloat(settings.thermocouple_offset);

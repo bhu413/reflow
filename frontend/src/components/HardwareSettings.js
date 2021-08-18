@@ -8,12 +8,10 @@ import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import MenuItem from '@material-ui/core/MenuItem';
 import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
-import Snackbar from '@material-ui/core/Snackbar';
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
 import IconButton from '@material-ui/core/IconButton';
 import RefreshIcon from '@material-ui/icons/Refresh';
-import MuiAlert from '@material-ui/lab/Alert';
 import InputAdornment from '@material-ui/core/InputAdornment';
 import Radio from '@material-ui/core/Radio';
 import RadioGroup from '@material-ui/core/RadioGroup';
@@ -107,17 +105,24 @@ class HardwareSettings extends Component {
     }
 
     handleFanTurnoffChange(e) {
-        if (e.target.value >= 0) {
-            this.setState({ fanTurnoffTemp: e.target.value, inputChanged: true });
+        this.setState({ fanTurnoffTemp: e.target.value, inputChanged: true });
+        if (isNaN(parseInt(e.target.value, 10))) {
+            this.setState({ inputChanged: false });
         }
     }
 
     handleThermocoupleOffset(e) {
         this.setState({ thermocoupleOffset: e.target.value, inputChanged: true });
+        if (isNaN(parseFloat(e.target.value))) {
+            this.setState({ inputChanged: false });
+        }
     }
 
     handlePercentOffset(e) {
         this.setState({ percentOffset: e.target.value, inputChanged: true });
+        if (isNaN(parseFloat(e.target.value))) {
+            this.setState({ inputChanged: false });
+        }
     }
 
     handleThermocoupleMode(e) {
@@ -228,10 +233,10 @@ class HardwareSettings extends Component {
                                 onKeyPress={this.handleKeyboardInput}
                                 layout={{
                                     default: [
-                                        "7 8 9",
-                                        "4 5 6",
-                                        "1 2 3",
-                                        "0 . {bksp}"
+                                        "7 8 9 {bksp}",
+                                        "4 5 6 ",
+                                        "1 2 3 ",
+                                        "0 . - "
                                     ]
                                 }}
                                 display={{
@@ -346,7 +351,6 @@ class HardwareSettings extends Component {
                                     <Grid item>
                                         <TextField
                                             variant="outlined"
-                                            type='number'
                                             label='Stop cooling at:'
                                             value={this.state.fanTurnoffTemp}
                                             onChange={this.handleFanTurnoffChange}
@@ -367,7 +371,6 @@ class HardwareSettings extends Component {
                                     <Grid item>
                                         <TextField
                                             variant="outlined"
-                                            type='number'
                                             label='Constant offset'
                                             value={this.state.thermocoupleOffset}
                                             onChange={this.handleThermocoupleOffset}
@@ -381,7 +384,6 @@ class HardwareSettings extends Component {
                                     <Grid item>
                                         <TextField
                                             variant="outlined"
-                                            type='number'
                                             label='Percent offset'
                                             value={this.state.percentOffset}
                                             onChange={this.handlePercentOffset}

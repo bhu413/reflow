@@ -314,7 +314,6 @@ class EditProfile extends Component {
   }
 
   saveProfile() {
-    this.setState({ enterNameDialog: false });
     var tempProfile = this.state.newProfile;
     tempProfile.date_created = Date.now();
     tempProfile.last_run = 0;
@@ -324,13 +323,11 @@ class EditProfile extends Component {
         console.log(res.data);
         if (res.data.status === 200) {
           this.setState({ newProfile: res.data.new_profile });
-          this.setState({ loadDialog: true });
+          this.setState({ loadDialog: true, enterNameDialog: false });
         } else {
           this.setState({saveProfileError: res.data.message, saveProfileErrorDialog: true});
         }
-        
       });
-
   }
 
   saveClicked() {

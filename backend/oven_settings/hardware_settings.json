@@ -4,9 +4,9 @@
    "relay_pin": 4,
    "fan_pin": 22,
    "buzzer_pin": 25,
-   "cooling_fan_pin": 16,
+   "cooling_fan_pin": 0,
    "fan_turnoff_temp": 50,
-   "thermocouple_offset": 0,
-   "percent_offset": 0,
+   "thermocouple_offset": -8,
+   "percent_offset": 8.5,
    "thermocouple_average_mode": false
 }
