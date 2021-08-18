@@ -141,33 +141,37 @@ module.exports.getAllProfiles = function () {
 module.exports.getProfile = function (profileName) {
     if (profileName === '') {
         return {
-            name: "flat",
+            name: "Sn42Bi57Ag1",
             date_created: Date.now(),
             last_run: 0,
             datapoints: [
                 {
                     x: 0,
-                    y: 30
+                    y: 20
                 },
                 {
-                    x: 75,
-                    y: 30
+                    x: 80,
+                    y: 85
+                },
+                {
+                    x: 121,
+                    y: 110
                 },
                 {
                     x: 150,
-                    y: 30
+                    y: 145
                 },
                 {
-                    x: 225,
-                    y: 30
+                    x: 195,
+                    y: 185
                 },
                 {
-                    x: 300,
-                    y: 30
+                    x: 235,
+                    y: 140
                 },
                 {
-                    x: 375,
-                    y: 30
+                    x: 298,
+                    y: 41
                 }
             ]
         };

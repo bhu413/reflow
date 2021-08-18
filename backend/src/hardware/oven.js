@@ -204,7 +204,7 @@ module.exports = function (socketio, tempSensor) {
             }
         };
 
-        beepBuzzer = function (numTimes) {
+        beepBuzzer = function (numTimes = 1) {
             if (buzzer !== null) {
                 var i = 0;
                 var buzzerInterval = setInterval(function () {
@@ -545,7 +545,6 @@ module.exports = function (socketio, tempSensor) {
                     fanOff();
                     currentAction = "Ready";
                     clearInterval(coolingInterval);
-                    beepBuzzer();
                 } else {
                     if (shouldRecord) {
                         percentDone = Math.min(Math.floor((currentX / datapoints[datapoints.length - 1].x) * 100), 100);
